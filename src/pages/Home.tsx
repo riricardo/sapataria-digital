@@ -15,28 +15,28 @@ export function Home() {
     <main>
       <section className="hero-section">
         <div className="hero-section__content">
-          <p className="eyebrow">👋 Atendimento simples pelo WhatsApp</p>
+          <p className="eyebrow">👋 Orçamento simples pelo site</p>
           <h1>Sapataria Bebedouro</h1>
           <p className="hero-copy">Conserto de sapatos, bolsas, cintos e artigos de couro</p>
           <p>
-            Envie fotos e detalhes pelo site, gere sua ordem de servico e confirme o pedido pelo
-            WhatsApp. E rapido, claro e ajuda o sapateiro a avaliar melhor antes de voce sair de casa.
+            Envie fotos e detalhes pelo site, gere sua solicitação e encaminhe por email para
+            avaliacao. Depois a sapataria retorna com a situacao do orçamento.
           </p>
           <div className="button-row">
-            <Button to="/novo-pedido">📸 Solicitar orcamento</Button>
-            <Button to="/consultar" variant="secondary">
-              🔎 Consultar pedido
+            <Button to="/novo-pedido">📸 Orçamento</Button>
+            <Button to="/consultar">
+              🔎 Consulta
             </Button>
           </div>
         </div>
         <div className="hero-panel" aria-label="Resumo do atendimento">
           <span className="hero-panel__stamp" aria-hidden="true">🧰</span>
-          <strong>Pedido com foto, codigo e resumo pronto.</strong>
-          <p>Acompanhe pelo codigo da ordem e pelo WhatsApp informado no cadastro.</p>
+          <strong>Orçamento com foto, codigo e resumo pronto.</strong>
+          <p>Acompanhe pelo codigo gerado ou pelo WhatsApp informado no cadastro.</p>
           <div className="hero-panel__steps" aria-label="Passos do pedido">
+            <span>📋 Descrição</span>
             <span>📷 Foto</span>
-            <span>🧾 Ordem</span>
-            <span>💬 WhatsApp</span>
+            <span>🧾 Avaliação</span>
           </div>
         </div>
       </section>
@@ -56,8 +56,8 @@ export function Home() {
             <strong>Horario de atendimento sera informado</strong>
           </div>
           <div className="info-box">
-            <span>💬 WhatsApp</span>
-            <strong>WhatsApp sera informado</strong>
+            <span>📩 Retorno</span>
+            <strong>A sapataria respondera apos avaliar o item</strong>
           </div>
         </div>
       </section>
@@ -69,8 +69,8 @@ export function Home() {
         </div>
         <div className="service-list">
           {services.map((service) => (
-            <span key={service.label}>
-              <span aria-hidden="true">{service.icon}</span>
+            <span className="service-item" key={service.label}>
+              <span className="service-item__icon" aria-hidden="true">{service.icon}</span>
               {service.label}
             </span>
           ))}

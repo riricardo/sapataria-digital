@@ -4,7 +4,6 @@ import { Button } from '../components/Button'
 import { Modal } from '../components/Modal'
 import { StatusBadge } from '../components/StatusBadge'
 import { deleteOrder, getOrders, updateOrder } from '../services/orderStorage'
-import { buildBudgetWhatsAppUrl, buildReadyWhatsAppUrl } from '../services/whatsapp'
 import { STATUS_LABELS, STATUS_OPTIONS, type Order, type OrderStatus } from '../types/order'
 
 export function AdminOrderDetails() {
@@ -96,7 +95,7 @@ export function AdminOrderDetails() {
             </select>
           </label>
           <label>
-            Valor do orcamento
+            Valor do orçamento
             <input value={order.budget ?? ''} onChange={(event) => setField('budget', event.target.value)} placeholder="Ex.: R$ 85,00" />
           </label>
           <label>
@@ -110,12 +109,6 @@ export function AdminOrderDetails() {
 
           <div className="form-actions stacked">
             <Button type="submit">💾 Salvar alteracoes</Button>
-            <a className="button button--secondary" href={buildBudgetWhatsAppUrl(order)} target="_blank">
-              💬 Enviar orcamento no WhatsApp
-            </a>
-            <a className="button button--secondary" href={buildReadyWhatsAppUrl(order)} target="_blank">
-              🎉 Avisar que esta pronto
-            </a>
             <Button variant="danger" onClick={() => setConfirmDelete(true)}>🗑️ Excluir pedido</Button>
           </div>
         </form>

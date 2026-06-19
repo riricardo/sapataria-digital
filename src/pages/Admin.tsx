@@ -35,7 +35,7 @@ export function Admin() {
         <div>
           <p className="eyebrow">🛠️ Area demonstrativa</p>
           <h1>Pedidos da sapataria</h1>
-          <p>Use esta area para acompanhar pedidos, alterar status e enviar avisos pelo WhatsApp.</p>
+          <p>Use esta area para acompanhar pedidos, alterar status e registrar atualizacoes ao cliente.</p>
         </div>
         <div className="admin-actions">
           <Button variant="secondary" onClick={handleCreateDemo}>✨ Criar dados demo</Button>

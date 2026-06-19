@@ -1,9 +1,16 @@
-import { type ChangeEvent, type FormEvent, type KeyboardEvent, useEffect, useRef, useState } from 'react'
+import {
+  type ChangeEvent,
+  type FormEvent,
+  type KeyboardEvent,
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '../components/Button'
 import { Modal } from '../components/Modal'
+import { buildOrderEmailUrl } from '../services/email'
 import { createOrder } from '../services/orderStorage'
-import { buildOrderWhatsAppUrl } from '../services/whatsapp'
 import type { ItemType, Order } from '../types/order'
 
 const itemTypes: ItemType[] = ['Sapato', 'Bolsa', 'Cinto', 'Jaqueta', 'Outro']
@@ -23,7 +30,6 @@ interface FormState {
   itemType: ItemType
   service: string
   description: string
-  example: string
   imageBase64List: string[]
 }
 
@@ -33,7 +39,6 @@ const initialState: FormState = {
   itemType: 'Sapato',
   service: '',
   description: '',
-  example: '',
   imageBase64List: [],
 }
 
@@ -46,7 +51,6 @@ export function NewOrder() {
   const itemTypeRef = useRef<HTMLSelectElement>(null)
   const serviceRef = useRef<HTMLInputElement>(null)
   const descriptionRef = useRef<HTMLTextAreaElement>(null)
-  const exampleRef = useRef<HTMLTextAreaElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const submitRef = useRef<HTMLButtonElement>(null)
   const navigate = useNavigate()
@@ -69,6 +73,29 @@ export function NewOrder() {
     }
     event.preventDefault()
     focusNext(next)
+  }
+
+  function revealInvalidField(field: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement) {
+    const target = field.closest('label') ?? field
+    const headerOffset = 150
+    const top = target.getBoundingClientRect().top + window.scrollY - headerOffset
+
+    window.scrollTo({ top: Math.max(top, 0), behavior: 'smooth' })
+    window.setTimeout(() => {
+      field.focus({ preventScroll: true })
+      field.reportValidity()
+    }, 260)
+  }
+
+  function getFirstInvalidField() {
+    const orderedFields = [
+      nameRef.current,
+      phoneRef.current,
+      serviceRef.current,
+      descriptionRef.current,
+    ]
+
+    return orderedFields.find((field) => field && !field.checkValidity()) ?? null
   }
 
   function handleImage(event: ChangeEvent<HTMLInputElement>) {
@@ -95,15 +122,32 @@ export function NewOrder() {
     })
   }
 
+  function removeImage(indexToRemove: number) {
+    updateField(
+      'imageBase64List',
+      form.imageBase64List.filter((_, index) => index !== indexToRemove),
+    )
+    setImageNames((current) => current.filter((_, index) => index !== indexToRemove))
+    if (fileRef.current) {
+      fileRef.current.value = ''
+    }
+  }
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    const invalidField = getFirstInvalidField()
+
+    if (invalidField) {
+      revealInvalidField(invalidField)
+      return
+    }
+
     const order = createOrder({
       customerName: form.customerName.trim(),
       phone: form.phone.trim(),
       itemType: form.itemType,
       service: form.service.trim(),
       description: form.description.trim(),
-      example: form.example.trim() || undefined,
       imageBase64: form.imageBase64List[0],
       imageBase64List: form.imageBase64List.length ? form.imageBase64List : undefined,
     })
@@ -119,15 +163,15 @@ export function NewOrder() {
     <main className="page-shell">
       <section className="form-page">
         <div className="section-heading">
-          <p className="eyebrow">🧾 Novo pedido</p>
-          <h1>Solicitar orcamento</h1>
+          <p className="eyebrow">🧾 Novo orçamento</p>
+          <h1>Solicitar orçamento</h1>
           <p>
             Preencha o essencial e, se puder, anexe uma foto da parte que precisa de conserto.
-            Depois voce envia o resumo pronto para a sapataria no WhatsApp.
+            Depois envie o resumo por email para a sapataria avaliar e responder.
           </p>
         </div>
 
-        <form className="form-grid" onSubmit={handleSubmit}>
+        <form className="form-grid" noValidate onSubmit={handleSubmit}>
           <label>
             Nome do cliente
             <input
@@ -194,35 +238,44 @@ export function NewOrder() {
               rows={4}
               value={form.description}
               onChange={(event) => updateField('description', event.target.value)}
-              onKeyDown={(event) => handleNextKey(event, exampleRef.current)}
+              onKeyDown={(event) => handleNextKey(event, fileRef.current)}
               placeholder="Conte o que aconteceu, onde esta o problema e se existe alguma urgencia."
             />
           </label>
 
-          <label className="form-grid__wide">
-            Voce tem um exemplo do que gostaria de fazer? <span>Opcional</span>
-            <textarea
-              ref={exampleRef}
-              rows={3}
-              value={form.example}
-              onChange={(event) => updateField('example', event.target.value)}
-              onKeyDown={(event) => handleNextKey(event, fileRef.current)}
-              placeholder="Ex.: Gostaria de manter a cor original ou trocar por um ziper mais resistente."
-            />
-          </label>
-
           <div className="upload-box form-grid__wide">
-            <strong>Fotos do conserto</strong>
+            <strong>Fotos do item</strong>
             <p>
-              Tire fotos da regiao que precisa de conserto. Exemplo: sola descolada, salto
+              Tire fotos do item e da regiao que precisa de conserto. Exemplo: sola descolada, salto
               quebrado, ziper da bolsa, costura aberta.
             </p>
-            <input ref={fileRef} accept="image/*" multiple type="file" onChange={handleImage} />
+            <label className="button button--secondary upload-box__button" htmlFor="order-images">
+              📷 Buscar imagem
+            </label>
+            <input
+              id="order-images"
+              ref={fileRef}
+              accept="image/*"
+              className="upload-box__input"
+              multiple
+              type="file"
+              onChange={handleImage}
+            />
             {imageNames.length ? <small>{imageNames.length} foto(s) selecionada(s)</small> : null}
             {form.imageBase64List.length ? (
               <div className="photo-preview-grid" aria-label="Previa das fotos selecionadas">
                 {form.imageBase64List.map((image, index) => (
                   <figure key={`${imageNames[index] ?? 'foto'}-${index}`}>
+                    <button
+                      aria-label={`Remover foto ${index + 1}`}
+                      className="photo-preview-grid__remove"
+                      type="button"
+                      onClick={() => removeImage(index)}
+                    >
+                      <svg aria-hidden="true" viewBox="0 0 20 20">
+                        <path d="m5.5 5.5 9 9m0-9-9 9" />
+                      </svg>
+                    </button>
                     <img src={image} alt={`Previa ${index + 1}`} />
                     <figcaption>{imageNames[index] ?? `Foto ${index + 1}`}</figcaption>
                   </figure>
@@ -233,9 +286,6 @@ export function NewOrder() {
 
           <div className="form-actions form-grid__wide">
             <Button ref={submitRef} type="submit">✨ Gerar pedido</Button>
-            <Button to="/" variant="ghost">
-              Voltar
-            </Button>
           </div>
         </form>
       </section>
@@ -246,8 +296,8 @@ export function NewOrder() {
           onClose={() => setCreatedOrder(null)}
           actions={
             <>
-              <a className="button button--primary" href={buildOrderWhatsAppUrl(createdOrder)} target="_blank">
-                💬 Enviar para a sapataria no WhatsApp
+              <a className="button button--primary" href={buildOrderEmailUrl(createdOrder)} target="_blank">
+                ✉️ Enviar orçamento por email
               </a>
               <Button variant="secondary" onClick={() => navigate('/consultar')}>
                 🔎 Ver status do pedido
@@ -262,8 +312,8 @@ export function NewOrder() {
             <p><strong>Descricao:</strong> {createdOrder.description}</p>
           </div>
           <p className="notice">
-            Por seguranca, o WhatsApp pode nao anexar a imagem automaticamente. Caso a foto nao va
-            junto, envie a foto manualmente na conversa.
+            O email sera aberto com o resumo preenchido. Se voce selecionou fotos, anexe as imagens
+            no email antes de enviar.
           </p>
         </Modal>
       ) : null}

@@ -1,12 +1,18 @@
 import type { Order } from '../types/order'
 
 export function generateOrderCode(orders: Order[]): string {
-  const lastNumber = orders.reduce((highest, order) => {
-    const number = Number(order.code.replace('SD-', ''))
+  const today = new Date().toISOString().slice(0, 10)
+  const prefix = `${today}-`
+  const lastNumberToday = orders.reduce((highest, order) => {
+    if (!order.code.startsWith(prefix)) {
+      return highest
+    }
+
+    const number = Number(order.code.slice(prefix.length))
     return Number.isFinite(number) ? Math.max(highest, number) : highest
   }, 0)
 
-  return `SD-${String(lastNumber + 1).padStart(4, '0')}`
+  return `${prefix}${String(lastNumberToday + 1).padStart(3, '0')}`
 }
 
 export function normalizePhone(phone: string): string {

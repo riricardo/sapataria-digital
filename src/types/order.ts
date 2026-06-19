@@ -32,7 +32,7 @@ export interface Order {
 export const STATUS_LABELS: Record<OrderStatus, string> = {
   novo: 'Novo pedido',
   em_analise: 'Em analise',
-  orcamento_enviado: 'Orcamento enviado',
+  orcamento_enviado: 'Orçamento enviado',
   aprovado: 'Aprovado',
   em_reparo: 'Em reparo',
   pronto: 'Pronto para retirada',

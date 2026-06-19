@@ -72,17 +72,16 @@ export function deleteOrder(orderId: string): void {
   saveOrders(getOrders().filter((order) => order.id !== orderId))
 }
 
-export function findOrderByCodeAndPhone(code: string, phone: string): Order | null {
-  const normalizedPhone = normalizePhone(phone)
+export function findOrderByCode(code: string): Order | null {
   const normalizedCode = code.trim().toUpperCase()
 
-  return (
-    getOrders().find(
-      (order) =>
-        order.code.toUpperCase() === normalizedCode &&
-        normalizePhone(order.phone) === normalizedPhone,
-    ) ?? null
-  )
+  return getOrders().find((order) => order.code.toUpperCase() === normalizedCode) ?? null
+}
+
+export function findOrdersByPhone(phone: string): Order[] {
+  const normalizedPhone = normalizePhone(phone)
+
+  return getOrders().filter((order) => normalizePhone(order.phone) === normalizedPhone)
 }
 
 export function clearOrders(): void {
@@ -94,7 +93,7 @@ export function createDemoOrders(): Order[] {
   const demoOrders: Order[] = [
     {
       id: crypto.randomUUID(),
-      code: 'SD-0001',
+      code: '2026-06-19-001',
       customerName: 'Maria Aparecida',
       phone: '17 99999-0101',
       itemType: 'Bolsa',
@@ -106,7 +105,7 @@ export function createDemoOrders(): Order[] {
     },
     {
       id: crypto.randomUUID(),
-      code: 'SD-0002',
+      code: '2026-06-19-002',
       customerName: 'Joao Carlos',
       phone: '17 98888-0202',
       itemType: 'Sapato',
