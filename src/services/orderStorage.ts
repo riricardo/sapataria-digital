@@ -10,8 +10,6 @@ export interface NewOrderInput {
   service: string
   description: string
   example?: string
-  imageBase64?: string
-  imageBase64List?: string[]
 }
 
 export function getOrders(): Order[] {
