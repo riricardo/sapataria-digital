@@ -1,7 +1,7 @@
 import imageCompression from 'browser-image-compression'
 
 const SEND_ORDER_EMAIL_URL =
-  'https://sapataria-digital-api-fb596c9604ae.herokuapp.com/api/email/send-order'
+  'https://sapataria-digital-api-fb596c9604ae.herokuapp.com/api/email/send'
 
 const IMAGE_COMPRESSION_OPTIONS = {
   maxSizeMB: 0.5,
@@ -16,11 +16,17 @@ export interface OrderEmailAttachment {
   contentBase64: string
 }
 
-export interface OrderEmailPayload {
+export interface OrderEmailHtmlOrder {
   orderCode: string
   customerName: string
   phone: string
   itemType: string
+  serviceDescription?: string
+  problemDescription?: string
+  exampleDescription?: string
+}
+
+export interface OrderEmailPayload extends OrderEmailHtmlOrder {
   subject?: string
   title?: string
   messageTitle?: string
@@ -28,10 +34,20 @@ export interface OrderEmailPayload {
   emailTitle?: string
   emailBody?: string
   formattedMessage?: string
-  serviceDescription?: string
-  problemDescription?: string
   imageBase64?: string
   attachments?: OrderEmailAttachment[]
+}
+
+interface OrderEmailApiPayload {
+  subject: string
+  html: string
+  text: string
+  attachments: OrderEmailAttachment[]
+}
+
+interface OrderEmailResponse {
+  success: boolean
+  message?: string
 }
 
 export function buildOrderEmailTitles(customerName: string) {
@@ -67,9 +83,71 @@ export function buildOrderEmailBody(orderData: {
   ].join('\n')
 }
 
-interface OrderEmailResponse {
-  success: boolean
-  message?: string
+export function escapeHtml(value = '') {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
+
+export function buildOrderEmailHtml(order: OrderEmailHtmlOrder) {
+  const {
+    orderCode,
+    customerName,
+    phone,
+    itemType,
+    serviceDescription,
+    problemDescription,
+    exampleDescription,
+  } = order
+
+  return `
+    <div style="font-family: Arial, sans-serif; color: #222; line-height: 1.5;">
+      <h1 style="margin: 0 0 16px; color: #7a3f18;">Novo pedido - Sapataria Bebedouro</h1>
+
+      <p style="font-size: 18px; margin: 0 0 24px;">
+        Ordem:
+        <strong style="background: #7a3f18; color: #fff; padding: 6px 10px; border-radius: 4px;">
+          ${escapeHtml(orderCode)}
+        </strong>
+      </p>
+
+      <table cellpadding="10" cellspacing="0" style="width: 100%; max-width: 720px; border-collapse: collapse; border: 1px solid #ddd;">
+        <tr>
+          <td style="font-weight: bold; width: 190px; border: 1px solid #ddd; background: #f7f3ef;">Cliente</td>
+          <td style="border: 1px solid #ddd;">${escapeHtml(customerName)}</td>
+        </tr>
+        <tr>
+          <td style="font-weight: bold; border: 1px solid #ddd; background: #f7f3ef;">Telefone</td>
+          <td style="border: 1px solid #ddd;">
+            <strong style="color: #0f5c2e;">${escapeHtml(phone)}</strong>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-weight: bold; border: 1px solid #ddd; background: #f7f3ef;">Tipo do item</td>
+          <td style="border: 1px solid #ddd;">
+            <strong>${escapeHtml(itemType)}</strong>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-weight: bold; border: 1px solid #ddd; background: #f7f3ef;">Serviço solicitado</td>
+          <td style="border: 1px solid #ddd;">
+            <strong>${escapeHtml(serviceDescription || 'Não informado')}</strong>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-weight: bold; border: 1px solid #ddd; background: #f7f3ef;">Problema</td>
+          <td style="border: 1px solid #ddd;">${escapeHtml(problemDescription || 'Não informado')}</td>
+        </tr>
+        <tr>
+          <td style="font-weight: bold; border: 1px solid #ddd; background: #f7f3ef;">Referência</td>
+          <td style="border: 1px solid #ddd;">${escapeHtml(exampleDescription || 'Não informado')}</td>
+        </tr>
+      </table>
+    </div>
+  `
 }
 
 function readFileAsDataUrl(file: Blob): Promise<string> {
@@ -107,6 +185,43 @@ function filenameWithMime(filename: string, contentType: string) {
   return `${nameWithoutExtension}.${extension}`
 }
 
+function buildOrderAttachments(orderData: OrderEmailPayload): OrderEmailAttachment[] {
+  if (orderData.attachments?.length) {
+    return orderData.attachments
+  }
+
+  if (!orderData.imageBase64) {
+    return []
+  }
+
+  return [
+    {
+      filename: `${orderData.orderCode}.jpg`,
+      contentType: 'image/jpeg',
+      contentBase64: orderData.imageBase64,
+    },
+  ]
+}
+
+function buildOrderEmailApiPayload(orderData: OrderEmailPayload): OrderEmailApiPayload {
+  const html = buildOrderEmailHtml({
+    orderCode: orderData.orderCode,
+    customerName: orderData.customerName,
+    phone: orderData.phone,
+    itemType: orderData.itemType,
+    serviceDescription: orderData.serviceDescription,
+    problemDescription: orderData.problemDescription,
+    exampleDescription: orderData.exampleDescription,
+  })
+
+  return {
+    subject: `Novo pedido ${orderData.orderCode} - Sapataria Bebedouro`,
+    html,
+    text: `Novo pedido ${orderData.orderCode} de ${orderData.customerName}. Telefone: ${orderData.phone}.`,
+    attachments: buildOrderAttachments(orderData),
+  }
+}
+
 export async function fileToCompressedAttachment(file: File): Promise<OrderEmailAttachment> {
   try {
     const compressedFile = await imageCompression(file, IMAGE_COMPRESSION_OPTIONS)
@@ -142,14 +257,17 @@ export async function fileToCompressedAttachment(file: File): Promise<OrderEmail
 }
 
 export async function sendOrderEmail(orderData: OrderEmailPayload): Promise<OrderEmailResponse> {
+  const payload = buildOrderEmailApiPayload(orderData)
   const response = await fetch(SEND_ORDER_EMAIL_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(orderData),
+    body: JSON.stringify(payload),
   })
-  const data = (await response.json()) as OrderEmailResponse
+  const data = (await response.json().catch(() => ({
+    success: response.ok,
+  }))) as OrderEmailResponse
 
   if (!response.ok || !data.success) {
     throw new Error(data.message || 'Erro ao enviar pedido')
