@@ -151,6 +151,7 @@ export function NewOrder() {
   const [imageAttachments, setImageAttachments] = useState<OrderEmailAttachment[]>([])
   const [toast, setToast] = useState<ToastState | null>(null)
   const [showImageError, setShowImageError] = useState(false)
+  const [isProcessingImages, setIsProcessingImages] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const nameRef = useRef<HTMLInputElement>(null)
   const phoneRef = useRef<HTMLInputElement>(null)
@@ -306,6 +307,11 @@ export function NewOrder() {
   }
 
   function handleImage(event: ChangeEvent<HTMLInputElement>) {
+    if (isProcessingImages) {
+      showToast('Aguarde enquanto as imagens anteriores são processadas.', 'error')
+      return
+    }
+
     const files = Array.from(event.target.files ?? [])
     if (!files.length) {
       return
@@ -319,37 +325,75 @@ export function NewOrder() {
     }
 
     const selectedFiles = files.slice(0, remainingSlots)
+    setIsProcessingImages(true)
 
-    Promise.all(selectedFiles.map(fileToCompressedImage))
-      .then((compressedImages) => {
-        updateField('imageBase64List', [
-          ...form.imageBase64List,
-          ...compressedImages.map((image) => image.attachment.contentBase64),
-        ])
-        setImageNames((current) => [
-          ...current,
-          ...compressedImages.map((image) => image.attachment.filename),
-        ])
-        setImageAttachments((current) => [
-          ...current,
-          ...compressedImages.map((image) => image.attachment),
-        ])
-        setShowImageError(false)
-        if (files.length > remainingSlots) {
-          showToast(`Use no máximo ${MAX_IMAGE_COUNT} fotos por pedido. As primeiras foram mantidas.`, 'error')
+    type ImageProcessResult =
+      | { file: File; attachment: OrderEmailAttachment; success: true }
+      | { file: File; error: unknown; success: false }
+
+    Promise.all(selectedFiles.map(async (file): Promise<ImageProcessResult> => {
+      try {
+        const compressed = await fileToCompressedImage(file)
+        return { file, attachment: compressed.attachment, success: true }
+      } catch (error) {
+        return { file, error, success: false }
+      }
+    }))
+      .then((results) => {
+        const successful = results.filter(
+          (result): result is { file: File; attachment: OrderEmailAttachment; success: true } => result.success,
+        )
+        const failed = results.filter(
+          (result): result is { file: File; error: unknown; success: false } => !result.success,
+        )
+
+        if (successful.length > 0) {
+          setForm((current) => ({
+            ...current,
+            imageBase64List: [
+              ...current.imageBase64List,
+              ...successful.map((result) => result.attachment.contentBase64),
+            ],
+          }))
+          setImageNames((current) => [
+            ...current,
+            ...successful.map((result) => result.attachment.filename),
+          ])
+          setImageAttachments((current) => [
+            ...current,
+            ...successful.map((result) => result.attachment),
+          ])
+          setShowImageError(false)
+          if (failed.length > 0) {
+            const failedNames = failed.map((result) => result.file.name).join(', ')
+            showToast(
+              `Algumas fotos não foram processadas: ${failedNames}. Tente usar JPG, PNG ou WEBP menores.`,
+              'error',
+            )
+          } else if (files.length > remainingSlots) {
+            showToast(`Use no máximo ${MAX_IMAGE_COUNT} fotos por pedido. As primeiras foram mantidas.`, 'error')
+          } else {
+            setToast(null)
+          }
+          focusNext(submitRef.current)
         } else {
-          setToast(null)
+          clearImageInputs()
+          setShowImageError(true)
+          const firstError = failed[0]?.error
+          const message = firstError instanceof Error
+            ? firstError.message
+            : 'Não foi possível preparar a imagem. Tente tirar outra foto ou escolher uma imagem da galeria.'
+          showToast(message, 'error')
         }
-        clearImageInputs()
-        focusNext(submitRef.current)
       })
-      .catch((error) => {
+      .catch(() => {
         clearImageInputs()
         setShowImageError(true)
-        const message = error instanceof Error
-          ? error.message
-          : 'Não foi possível preparar a imagem. Tente tirar outra foto ou escolher uma imagem da galeria.'
-        showToast(message, 'error')
+        showToast('Não foi possível preparar as imagens. Tente novamente com JPG, PNG ou WEBP menores.', 'error')
+      })
+      .finally(() => {
+        clearImageInputs()
+        setIsProcessingImages(false)
       })
   }
 
