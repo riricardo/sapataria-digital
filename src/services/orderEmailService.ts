@@ -1,5 +1,20 @@
+import imageCompression from 'browser-image-compression'
+
 const SEND_ORDER_EMAIL_URL =
   'https://sapataria-digital-api-fb596c9604ae.herokuapp.com/api/email/send-order'
+
+const IMAGE_COMPRESSION_OPTIONS = {
+  maxSizeMB: 0.5,
+  maxWidthOrHeight: 1600,
+  useWebWorker: true,
+  initialQuality: 0.85,
+}
+
+export interface OrderEmailAttachment {
+  filename: string
+  contentType: string
+  contentBase64: string
+}
 
 export interface OrderEmailPayload {
   orderCode: string
@@ -16,6 +31,7 @@ export interface OrderEmailPayload {
   serviceDescription?: string
   problemDescription?: string
   imageBase64?: string
+  attachments?: OrderEmailAttachment[]
 }
 
 export function buildOrderEmailTitles(customerName: string) {
@@ -56,7 +72,7 @@ interface OrderEmailResponse {
   message?: string
 }
 
-export function fileToBase64(file: File): Promise<string> {
+function readFileAsDataUrl(file: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
 
@@ -65,6 +81,64 @@ export function fileToBase64(file: File): Promise<string> {
 
     reader.readAsDataURL(file)
   })
+}
+
+function sizeInMB(file: Blob): string {
+  return (file.size / 1024 / 1024).toFixed(2)
+}
+
+function mimeFromDataUrl(dataUrl: string, fallback: string) {
+  const match = dataUrl.match(/^data:([^;]+);base64,/)
+  return match?.[1] ?? fallback
+}
+
+function filenameWithMime(filename: string, contentType: string) {
+  const nameWithoutExtension = filename.replace(/\.[^.]+$/, '') || 'imagem'
+  const extensionByMime: Record<string, string> = {
+    'image/jpeg': 'jpg',
+    'image/jpg': 'jpg',
+    'image/png': 'png',
+    'image/webp': 'webp',
+    'image/heic': 'heic',
+    'image/heif': 'heif',
+  }
+  const extension = extensionByMime[contentType] ?? 'jpg'
+
+  return `${nameWithoutExtension}.${extension}`
+}
+
+export async function fileToCompressedAttachment(file: File): Promise<OrderEmailAttachment> {
+  try {
+    const compressedFile = await imageCompression(file, IMAGE_COMPRESSION_OPTIONS)
+    const contentBase64 = await readFileAsDataUrl(compressedFile)
+    const contentType = mimeFromDataUrl(
+      contentBase64,
+      compressedFile.type || file.type || 'image/jpeg',
+    )
+
+    console.log('[image-compression]', {
+      filename: file.name,
+      mimeType: file.type || 'desconhecido',
+      originalSizeMB: sizeInMB(file),
+      compressedSizeMB: sizeInMB(compressedFile),
+    })
+
+    return {
+      filename: filenameWithMime(file.name, contentType),
+      contentType,
+      contentBase64,
+    }
+  } catch (error) {
+    console.error('[image-compression] Falha ao comprimir imagem', {
+      filename: file.name,
+      mimeType: file.type || 'desconhecido',
+      originalSizeMB: sizeInMB(file),
+      error,
+    })
+    throw new Error('Não foi possível preparar a imagem. Tente outra foto ou envie sem imagem.', {
+      cause: error,
+    })
+  }
 }
 
 export async function sendOrderEmail(orderData: OrderEmailPayload): Promise<OrderEmailResponse> {

@@ -13,7 +13,6 @@ export type ItemType =
   | 'Bolsa'
   | 'Cinto'
   | 'Jaqueta'
-  | 'Imagem religiosa'
   | 'Artigo religioso'
   | 'Artesanato'
   | 'Outro'

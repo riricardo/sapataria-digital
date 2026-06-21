@@ -1,0 +1,42 @@
+//@baseUrl = https://web-production-ab699.up.railway.app
+
+@baseUrl =https://sapataria-digital-api-fb596c9604ae.herokuapp.com
+
+### Health check
+GET {{baseUrl}}/
+
+### Enviar pedido completo (com attachment)
+POST {{baseUrl}}/api/email/send
+Content-Type: application/json
+
+{
+  "subject": "Novo pedido SD-0001 - Sapataria Bebedouro",
+  "html": "<div style=\"font-family: Arial, sans-serif; color: #222;\">\n  <h1 style=\"color:#7a3f18;\">Novo pedido - Sapataria Bebedouro</h1>\n  <p>Ordem: <strong style=\"background:#7a3f18;color:#fff;padding:6px 10px;border-radius:4px;\">SD-0001</strong></p>\n  <p>Cliente: João Silva</p>\n</div>",
+  "text": "Novo pedido SD-0001 de João Silva. Telefone: 17999999999.",
+  "attachments": [
+    {
+      "filename": "SD-0001.jpg",
+      "contentType": "image/jpeg",
+      "contentBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2w=="
+    }
+  ]
+}
+
+### Enviar pedido sem imagem
+POST {{baseUrl}}/api/email/send
+Content-Type: application/json
+
+{
+  "subject": "Novo pedido SD-0002 - Sapataria Bebedouro",
+  "html": "<div style=\"font-family: Arial, sans-serif; color: #222;\">\n  <h1 style=\"color:#7a3f18;\">Novo pedido - Sapataria Bebedouro</h1>\n  <p>Ordem: <strong style=\"background:#7a3f18;color:#fff;padding:6px 10px;border-radius:4px;\">SD-0002</strong></p>\n  <p>Cliente: Maria Oliveira</p>\n</div>",
+  "text": "Novo pedido SD-0002 de Maria Oliveira. Telefone: 17988888888.",
+  "attachments": []
+}
+
+### Testar validação de campos obrigatórios (falta subject/html)
+POST {{baseUrl}}/api/email/send
+Content-Type: application/json
+
+{
+  "text": "Apenas texto mas sem subject ou html"
+}

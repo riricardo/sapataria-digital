@@ -8,7 +8,7 @@ const services = [
   { icon: '👜', label: 'Troca de zíper' },
   { icon: '🧵', label: 'Costura' },
   { icon: '🧥', label: 'Reforma de couro' },
-  { icon: '🕯️', label: 'Restauração de imagens religiosas' },
+  { icon: '🕯️', label: 'Restauração de artigos religiosos' },
   { icon: '🖌️', label: 'Pintura e acabamento artesanal' },
   { icon: '🧰', label: 'Reparo em peças de artesanato' },
 ]

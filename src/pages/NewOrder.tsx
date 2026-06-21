@@ -1,4 +1,4 @@
-import {
+﻿import {
   type ChangeEvent,
   type FormEvent,
   type KeyboardEvent,
@@ -12,8 +12,9 @@ import { Modal } from '../components/Modal'
 import {
   buildOrderEmailBody,
   buildOrderEmailTitles,
-  fileToBase64,
+  fileToCompressedAttachment,
   sendOrderEmail,
+  type OrderEmailAttachment,
 } from '../services/orderEmailService'
 import { createOrder, deleteOrder } from '../services/orderStorage'
 import type { ItemType, Order } from '../types/order'
@@ -23,7 +24,6 @@ const itemTypes: ItemType[] = [
   'Bolsa',
   'Cinto',
   'Jaqueta',
-  'Imagem religiosa',
   'Artigo religioso',
   'Artesanato',
   'Outro',
@@ -36,7 +36,6 @@ const serviceSuggestions = [
   'Reforma de couro',
   'Ajuste de cinto',
   'Limpeza e hidratação',
-  'Restauração de imagem religiosa',
   'Restauração de artigo religioso',
   'Pintura e acabamento artesanal',
   'Reparo em peça de artesanato',
@@ -61,16 +60,95 @@ const initialState: FormState = {
   imageBase64List: [],
 }
 
+const DRAFT_STORAGE_KEY = 'sapataria-bebedouro-new-order-draft'
+const MAX_IMAGE_COUNT = 4
+
+interface DraftState {
+  form: Omit<FormState, 'imageBase64List'>
+}
+
 type ToastState = {
   message: string
   type: 'error' | 'success'
 }
 
+function isItemType(value: unknown): value is ItemType {
+  return itemTypes.includes(value as ItemType)
+}
+
+function readDraftState(): DraftState | null {
+  try {
+    const rawDraft = localStorage.getItem(DRAFT_STORAGE_KEY)
+    if (!rawDraft) {
+      return null
+    }
+
+    const parsed = JSON.parse(rawDraft) as Partial<DraftState>
+    const parsedForm = (parsed.form ?? {}) as Partial<FormState>
+
+    return {
+      form: {
+        customerName: typeof parsedForm.customerName === 'string' ? parsedForm.customerName : '',
+        phone: typeof parsedForm.phone === 'string' ? parsedForm.phone : '',
+        itemType: isItemType(parsedForm.itemType) ? parsedForm.itemType : initialState.itemType,
+        service: typeof parsedForm.service === 'string' ? parsedForm.service : '',
+        description: typeof parsedForm.description === 'string' ? parsedForm.description : '',
+      },
+    }
+  } catch {
+    return null
+  }
+}
+
+function hasDraftContent(form: FormState) {
+  return Boolean(
+    form.customerName.trim()
+      || form.phone.trim()
+      || form.service.trim()
+      || form.description.trim()
+      || form.itemType !== initialState.itemType,
+  )
+}
+
+function saveDraftState(form: FormState) {
+  if (!hasDraftContent(form)) {
+    localStorage.removeItem(DRAFT_STORAGE_KEY)
+    return
+  }
+
+  const draft: DraftState = {
+    form: {
+      customerName: form.customerName,
+      phone: form.phone,
+      itemType: form.itemType,
+      service: form.service,
+      description: form.description,
+    },
+  }
+
+  try {
+    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft))
+  } catch {
+    try {
+      localStorage.removeItem(DRAFT_STORAGE_KEY)
+    } catch {
+      // Sem localStorage disponivel, o formulario segue funcionando sem rascunho.
+    }
+  }
+}
+
+function clearDraftState() {
+  localStorage.removeItem(DRAFT_STORAGE_KEY)
+}
+
 export function NewOrder() {
-  const [form, setForm] = useState<FormState>(initialState)
+  const [form, setForm] = useState<FormState>(() => {
+    const draft = readDraftState()
+    return draft ? { ...draft.form, imageBase64List: [] } : initialState
+  })
   const [createdOrder, setCreatedOrder] = useState<Order | null>(null)
   const [imageNames, setImageNames] = useState<string[]>([])
-  const [imageFiles, setImageFiles] = useState<File[]>([])
+  const [imageAttachments, setImageAttachments] = useState<OrderEmailAttachment[]>([])
   const [toast, setToast] = useState<ToastState | null>(null)
   const [showImageError, setShowImageError] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -80,14 +158,16 @@ export function NewOrder() {
   const serviceRef = useRef<HTMLInputElement>(null)
   const descriptionRef = useRef<HTMLTextAreaElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
-  const uploadBoxRef = useRef<HTMLDivElement>(null)
-  const uploadButtonRef = useRef<HTMLLabelElement>(null)
   const submitRef = useRef<HTMLButtonElement>(null)
   const navigate = useNavigate()
 
   useEffect(() => {
     nameRef.current?.focus()
   }, [])
+
+  useEffect(() => {
+    saveDraftState(form)
+  }, [form])
 
   useEffect(() => {
     if (!toast) {
@@ -137,20 +217,6 @@ export function NewOrder() {
     }, 260)
   }
 
-  function revealMissingImage() {
-    const target = uploadBoxRef.current
-    const headerOffset = 150
-
-    if (target) {
-      const top = target.getBoundingClientRect().top + window.scrollY - headerOffset
-      window.scrollTo({ top: Math.max(top, 0), behavior: 'smooth' })
-    }
-
-    setShowImageError(true)
-    showToast('Adicione pelo menos uma foto do item para solicitar o orçamento.', 'error')
-    window.setTimeout(() => uploadButtonRef.current?.focus({ preventScroll: true }), 260)
-  }
-
   function getFirstInvalidField() {
     const orderedFields = [
       {
@@ -183,27 +249,38 @@ export function NewOrder() {
     if (!files.length) {
       updateField('imageBase64List', [])
       setImageNames([])
-      setImageFiles([])
+      setImageAttachments([])
       return
     }
 
-    Promise.all(
-      files.map(
-        (file) =>
-          new Promise<string>((resolve) => {
-            const reader = new FileReader()
-            reader.onload = () => resolve(String(reader.result ?? ''))
-            reader.readAsDataURL(file)
-          }),
-      ),
-    ).then((images) => {
-      updateField('imageBase64List', images)
-      setImageNames(files.map((file) => file.name))
-      setImageFiles(files)
-      setShowImageError(false)
-      setToast(null)
-      focusNext(submitRef.current)
-    })
+    const selectedFiles = files.slice(0, MAX_IMAGE_COUNT)
+
+    Promise.all(selectedFiles.map(fileToCompressedAttachment))
+      .then((attachments) => {
+        updateField(
+          'imageBase64List',
+          attachments.map((attachment) => attachment.contentBase64),
+        )
+        setImageNames(attachments.map((attachment) => attachment.filename))
+        setImageAttachments(attachments)
+        setShowImageError(false)
+        if (files.length > MAX_IMAGE_COUNT) {
+          showToast(`Use no máximo ${MAX_IMAGE_COUNT} fotos por pedido. As primeiras foram mantidas.`, 'error')
+        } else {
+          setToast(null)
+        }
+        focusNext(submitRef.current)
+      })
+      .catch(() => {
+        updateField('imageBase64List', [])
+        setImageNames([])
+        setImageAttachments([])
+        if (fileRef.current) {
+          fileRef.current.value = ''
+        }
+        setShowImageError(true)
+        showToast('Nao foi possivel preparar a imagem. Tente outra foto ou envie sem imagem.', 'error')
+      })
   }
 
   function removeImage(indexToRemove: number) {
@@ -212,7 +289,7 @@ export function NewOrder() {
       form.imageBase64List.filter((_, index) => index !== indexToRemove),
     )
     setImageNames((current) => current.filter((_, index) => index !== indexToRemove))
-    setImageFiles((current) => current.filter((_, index) => index !== indexToRemove))
+    setImageAttachments((current) => current.filter((_, index) => index !== indexToRemove))
     if (fileRef.current) {
       fileRef.current.value = ''
     }
@@ -231,11 +308,6 @@ export function NewOrder() {
       return
     }
 
-    if (!form.imageBase64List.length) {
-      revealMissingImage()
-      return
-    }
-
     setIsSubmitting(true)
     const order = createOrder({
       customerName: form.customerName.trim(),
@@ -243,10 +315,13 @@ export function NewOrder() {
       itemType: form.itemType,
       service: form.service.trim(),
       description: form.description.trim(),
+      imageBase64: form.imageBase64List[0],
+      imageBase64List: form.imageBase64List,
     })
 
     try {
-      const imageBase64 = imageFiles[0] ? await fileToBase64(imageFiles[0]) : form.imageBase64List[0]
+      const attachments = imageAttachments
+      const imageBase64 = attachments[0]?.contentBase64
       const emailTitles = buildOrderEmailTitles(order.customerName)
       const emailBody = buildOrderEmailBody({
         orderCode: order.code,
@@ -271,15 +346,17 @@ export function NewOrder() {
         formattedMessage: emailBody,
         serviceDescription: order.service,
         problemDescription: order.description,
+        attachments,
         ...(imageBase64 ? { imageBase64 } : {}),
       })
 
       setCreatedOrder(order)
       setShowImageError(false)
       showToast('Orçamento enviado com sucesso.', 'success')
+      clearDraftState()
       setForm(initialState)
       setImageNames([])
-      setImageFiles([])
+      setImageAttachments([])
       if (fileRef.current) {
         fileRef.current.value = ''
       }
@@ -399,7 +476,6 @@ export function NewOrder() {
 
           <div
             className={`upload-box form-grid__wide ${showImageError ? 'upload-box--error' : ''}`.trim()}
-            ref={uploadBoxRef}
           >
             <strong>Fotos do item</strong>
             <p>
@@ -409,7 +485,6 @@ export function NewOrder() {
             <label
               className="button button--secondary upload-box__button"
               htmlFor="order-images"
-              ref={uploadButtonRef}
               tabIndex={0}
             >
               📷 Buscar imagem
@@ -458,6 +533,16 @@ export function NewOrder() {
       {toast ? (
         <div className={`toast toast--${toast.type}`} role="alert">
           {toast.message}
+        </div>
+      ) : null}
+
+      {isSubmitting ? (
+        <div className="sending-overlay" role="status" aria-live="polite" aria-label="Enviando orçamento">
+          <div className="sending-overlay__panel">
+            <span className="hammer-emoji sending-overlay__hammer" aria-hidden="true">🔨</span>
+            <strong>Enviando orçamento</strong>
+            <p>Preparando os dados e avisando a sapataria.</p>
+          </div>
         </div>
       ) : null}
 

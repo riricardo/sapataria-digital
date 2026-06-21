@@ -911,7 +911,7 @@ textarea {
 .toast {
   position: fixed;
   right: clamp(14px, 4vw, 28px);
-  bottom: clamp(14px, 4vw, 28px);
+  top: clamp(84px, 12vw, 112px);
   z-index: 30;
   width: min(360px, calc(100% - 28px));
   border: 1px solid transparent;
@@ -934,6 +934,43 @@ textarea {
   border-left: 5px solid var(--success);
   background: rgba(47, 111, 78, 0.9);
   color: white;
+}
+
+.sending-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(45, 27, 18, 0.52);
+  backdrop-filter: blur(4px);
+}
+
+.sending-overlay__panel {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  width: min(340px, 100%);
+  border: 1px solid rgba(90, 51, 32, 0.16);
+  border-radius: 8px;
+  padding: 24px 22px;
+  background: var(--white);
+  box-shadow: 0 24px 60px rgba(45, 27, 18, 0.32);
+  text-align: center;
+}
+
+.sending-overlay__hammer {
+  font-size: 2.6rem;
+}
+
+.sending-overlay__panel strong {
+  color: var(--brown-900);
+  font-size: 1.08rem;
+}
+
+.sending-overlay__panel p {
+  margin: 0;
 }
 
 .summary-list {
@@ -1109,9 +1146,9 @@ textarea {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  min-height: 28px;
+  min-height: 30px;
   border-radius: 999px;
-  padding: 5px 10px;
+  padding: 6px 12px;
   background: linear-gradient(180deg, var(--white), var(--cream-200));
   color: var(--brown-700);
   font-size: 0.78rem;

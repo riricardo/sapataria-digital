@@ -9,6 +9,8 @@ export interface NewOrderInput {
   itemType: ItemType
   service: string
   description: string
+  imageBase64?: string
+  imageBase64List?: string[]
 }
 
 export function getOrders(): Order[] {
@@ -26,7 +28,21 @@ export function getOrders(): Order[] {
 }
 
 export function saveOrders(orders: Order[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(orders))
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(orders))
+  } catch (error) {
+    const ordersWithoutImages = orders.map((order) => ({
+      ...order,
+      imageBase64: undefined,
+      imageBase64List: undefined,
+    }))
+
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(ordersWithoutImages))
+    } catch {
+      throw error
+    }
+  }
 }
 
 export function createOrder(input: NewOrderInput): Order {
@@ -120,8 +136,8 @@ export function createDemoOrders(): Order[] {
       code: '2026-06-19-003',
       customerName: 'Ana Paula',
       phone: '17 97777-0303',
-      itemType: 'Imagem religiosa',
-      service: 'Restauração de imagem religiosa',
+      itemType: 'Artigo religioso',
+      service: 'Restauração de artigo religioso',
       description: 'A imagem está com a pintura desgastada e uma pequena lasca na base.',
       status: 'em_analise',
       createdAt: now.toISOString(),
