@@ -1,4 +1,4 @@
-const assetBaseUrl = import.meta.env.BASE_URL
+import { staticAsset } from '../utils/staticAsset'
 
 type ShopItem = {
   title: string
@@ -12,41 +12,41 @@ const shopItems: ShopItem[] = [
   {
     title: 'Carteira de couro',
     price: 'R$ 89,90',
-    image: `${assetBaseUrl}shop/carteira-couro.svg`,
+    image: staticAsset('shop/carteira-couro.svg'),
     images: [
-      `${assetBaseUrl}shop/carteira-couro.svg`,
-      `${assetBaseUrl}shop/carteira-couro-2.svg`,
-      `${assetBaseUrl}shop/carteira-couro-3.svg`,
+      staticAsset('shop/carteira-couro.svg'),
+      staticAsset('shop/carteira-couro-2.svg'),
+      staticAsset('shop/carteira-couro-3.svg'),
     ],
     description: 'Modelo compacto para uso diário.',
   },
   {
     title: 'Terço artesanal',
     price: 'R$ 45,00',
-    image: `${assetBaseUrl}shop/terco-artesanal.svg`,
+    image: staticAsset('shop/terco-artesanal.svg'),
     description: 'Peça artesanal disponível na loja.',
   },
   {
     title: 'Cinto social',
     price: 'R$ 79,90',
-    image: `${assetBaseUrl}shop/cinto-social.svg`,
+    image: staticAsset('shop/cinto-social.svg'),
   },
   {
     title: 'Chaveiro artesanal',
     price: 'R$ 24,90',
-    image: `${assetBaseUrl}shop/chaveiro-artesanal.svg`,
+    image: staticAsset('shop/chaveiro-artesanal.svg'),
     description: 'Sugestão de presente simples e útil.',
   },
   {
     title: 'Imagem decorativa',
     price: 'R$ 120,00',
-    image: `${assetBaseUrl}shop/imagem-decorativa.svg`,
+    image: staticAsset('shop/imagem-decorativa.svg'),
     description: 'Item de exemplo para artigos religiosos e decoração.',
   },
   {
     title: 'Bolsa pequena',
     price: 'R$ 149,90',
-    image: `${assetBaseUrl}shop/bolsa-pequena.svg`,
+    image: staticAsset('shop/bolsa-pequena.svg'),
   },
 ]
 

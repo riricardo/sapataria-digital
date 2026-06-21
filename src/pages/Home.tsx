@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Button } from '../components/Button'
-
-const assetBaseUrl = import.meta.env.BASE_URL
+import { staticAsset } from '../utils/staticAsset'
 
 const services = [
   { icon: '👞', label: 'Troca de sola' },
@@ -16,20 +15,59 @@ const services = [
 
 const galleryItems = [
   {
-    image: `${assetBaseUrl}gallery/trabalho-sapato.svg`,
-    title: 'Consertos em calçados',
+    image: staticAsset('gallery/sapato-marrom-antes-depois.png'),
+    fallbackImage: staticAsset('gallery/trabalho-sapato.svg'),
+    title: 'Antes e depois em sapato marrom',
   },
   {
-    image: `${assetBaseUrl}gallery/trabalho-bolsa.svg`,
-    title: 'Bolsas e couro',
+    image: staticAsset('gallery/bota-branca-antes-depois.png'),
+    fallbackImage: staticAsset('gallery/trabalho-sapato.svg'),
+    title: 'Antes e depois em bota branca',
   },
   {
-    image: `${assetBaseUrl}gallery/trabalho-religioso.svg`,
+    image: staticAsset('gallery/bota-couro-antes-depois.png'),
+    fallbackImage: staticAsset('gallery/trabalho-sapato.svg'),
+    title: 'Antes e depois em bota de couro',
+  },
+  {
+    image: staticAsset('gallery/sandalia-antes-depois.png'),
+    fallbackImage: staticAsset('gallery/trabalho-sapato.svg'),
+    title: 'Antes e depois em sandália',
+  },
+  {
+    image: staticAsset('gallery/maquina-costura-sapato.png'),
+    fallbackImage: staticAsset('gallery/trabalho-sapato.svg'),
+    title: 'Sapato em máquina de costura',
+  },
+  {
+    image: staticAsset('gallery/sapato-sola-palha.png'),
+    fallbackImage: staticAsset('gallery/trabalho-sapato.svg'),
+    title: 'Sola de calçado',
+  },
+  {
+    image: staticAsset('gallery/loja-artesanato.png'),
+    fallbackImage: staticAsset('gallery/trabalho-artesanato.svg'),
+    title: 'Loja e artesanato',
+  },
+  {
+    image: staticAsset('gallery/corujas-artesanais.png'),
+    fallbackImage: staticAsset('gallery/trabalho-artesanato.svg'),
+    title: 'Peças artesanais',
+  },
+  {
+    image: staticAsset('gallery/artigos-religiosos.png'),
+    fallbackImage: staticAsset('gallery/trabalho-religioso.svg'),
     title: 'Artigos religiosos',
   },
   {
-    image: `${assetBaseUrl}gallery/trabalho-artesanato.svg`,
-    title: 'Artesanato',
+    image: staticAsset('gallery/restauracao-santos.png'),
+    fallbackImage: staticAsset('gallery/trabalho-religioso.svg'),
+    title: 'Restauração de imagens',
+  },
+  {
+    image: staticAsset('gallery/bonecos-artesanais.png'),
+    fallbackImage: staticAsset('gallery/trabalho-artesanato.svg'),
+    title: 'Bonecos artesanais',
   },
 ]
 
@@ -77,6 +115,42 @@ export function Home() {
             <Button to="/consultar">🔎 Consulta</Button>
             <Button to="/loja">🛍️ Loja</Button>
           </div>
+          <section className="work-carousel-section hero-gallery">
+            <div className="section-heading section-heading--inline">
+              <div>
+                <p className="eyebrow">Trabalhos</p>
+                <h2>Galeria</h2>
+              </div>
+            </div>
+            <div className="work-carousel" aria-live="polite">
+              <div className="work-carousel__media">
+                <img
+                  src={activeGalleryItem.image}
+                  alt={activeGalleryItem.title}
+                  data-fallback={activeGalleryItem.fallbackImage}
+                  onError={(event) => {
+                    if (event.currentTarget.dataset.fallbackUsed) {
+                      return
+                    }
+
+                    event.currentTarget.dataset.fallbackUsed = 'true'
+                    event.currentTarget.src = event.currentTarget.dataset.fallback ?? ''
+                  }}
+                />
+              </div>
+              <div className="work-carousel__dots" aria-label="Selecionar imagem">
+                {galleryItems.map((item, index) => (
+                  <button
+                    aria-label={`Mostrar ${item.title}`}
+                    className={index === activeGalleryIndex ? 'is-active' : ''}
+                    key={item.title}
+                    type="button"
+                    onClick={() => setActiveGalleryIndex(index)}
+                  />
+                ))}
+              </div>
+            </div>
+          </section>
         </div>
         <div className="hero-panel" aria-label="Resumo do atendimento">
           <span className="hero-panel__stamp" aria-hidden="true">🧰</span>
@@ -86,31 +160,6 @@ export function Home() {
             <span>📋 Descrição</span>
             <span>📷 Foto</span>
             <span>🧾 Avaliação</span>
-          </div>
-        </div>
-      </section>
-
-      <section className="section work-carousel-section">
-        <div className="section-heading section-heading--inline">
-          <div>
-            <p className="eyebrow">Trabalhos</p>
-            <h2>Galeria</h2>
-          </div>
-        </div>
-        <div className="work-carousel" aria-live="polite">
-          <div className="work-carousel__media">
-            <img src={activeGalleryItem.image} alt={activeGalleryItem.title} />
-          </div>
-          <div className="work-carousel__dots" aria-label="Selecionar imagem">
-            {galleryItems.map((item, index) => (
-              <button
-                aria-label={`Mostrar ${item.title}`}
-                className={index === activeGalleryIndex ? 'is-active' : ''}
-                key={item.title}
-                type="button"
-                onClick={() => setActiveGalleryIndex(index)}
-              />
-            ))}
           </div>
         </div>
       </section>
