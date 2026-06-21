@@ -73,7 +73,7 @@ const galleryItems = [
 
 export function Home() {
   const [activeGalleryIndex, setActiveGalleryIndex] = useState(0)
-  const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const timerRef = useRef<number | null>(null)
 
   useEffect(() => {
     const startTimer = () => {
