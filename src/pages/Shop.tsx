@@ -4,6 +4,7 @@ type ShopItem = {
   title: string
   price: string
   image: string
+  images?: string[]
   description?: string
 }
 
@@ -12,6 +13,11 @@ const shopItems: ShopItem[] = [
     title: 'Carteira de couro',
     price: 'R$ 89,90',
     image: `${assetBaseUrl}shop/carteira-couro.svg`,
+    images: [
+      `${assetBaseUrl}shop/carteira-couro.svg`,
+      `${assetBaseUrl}shop/carteira-couro-2.svg`,
+      `${assetBaseUrl}shop/carteira-couro-3.svg`,
+    ],
     description: 'Modelo compacto para uso diário.',
   },
   {
@@ -48,25 +54,41 @@ export function Shop() {
   return (
     <main className="page-shell">
       <section className="shop-page">
-        <div className="section-heading">
+        <div className="section-heading shop-page__heading">
           <p className="eyebrow">Loja</p>
           <h1>Artigos à venda</h1>
           <p>Itens disponível para aquisição na loja física.</p>
         </div>
 
         <div className="shop-grid">
-          {shopItems.map((item) => (
-            <article className="shop-card" key={item.title}>
-              <img src={item.image} alt={item.title} />
-              <div className="shop-card__body">
-                <div>
+          {shopItems.map((item) => {
+            const images = item.images ?? [item.image]
+
+            return (
+              <article className="shop-card" key={item.title}>
+                <div className="shop-card__media">
+                  <div
+                    className={`shop-card__gallery ${images.length > 1 ? 'shop-card__gallery--scrollable' : ''}`}
+                    aria-label={`Fotos de ${item.title}`}
+                  >
+                    {images.map((image, index) => (
+                      <img
+                        alt={`${item.title} ${index + 1}`}
+                        key={image}
+                        src={image}
+                      />
+                    ))}
+                  </div>
+                  {images.length > 1 ? <span className="shop-card__photo-count">{images.length} fotos</span> : null}
+                  <strong>{item.price}</strong>
+                </div>
+                <div className="shop-card__body">
                   <h2>{item.title}</h2>
                   {item.description ? <p>{item.description}</p> : null}
                 </div>
-                <strong>{item.price}</strong>
-              </div>
-            </article>
-          ))}
+              </article>
+            )
+          })}
         </div>
       </section>
     </main>

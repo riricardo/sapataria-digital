@@ -54,9 +54,9 @@ export function Home() {
 
   return (
     <main>
-      <section className="hero-section">
+      <section className="hero-section hero-section--polished">
         <div className="hero-section__content">
-          <p className="eyebrow">👋 Orçamento simples pelo site</p>
+          <p className="eyebrow">Orçamento simples pelo site</p>
           <h1>Sapataria Bebedouro</h1>
           <p className="hero-copy">
             Consertos em couro, artesanato e restauração de artigos religiosos
@@ -66,6 +66,12 @@ export function Home() {
             analisa sapatos, bolsas, peças artesanais e muito mais. A loja também conta
             com itens disponíveis para aquisição na loja física.
           </p>
+          <div className="hero-tags" aria-label="Áreas atendidas">
+            <span>👜 Couro</span>
+            <span>🖌️ Artesanato</span>
+            <span>🕯️ Artigos religiosos</span>
+            <span>🛍️ Loja física</span>
+          </div>
           <div className="button-row">
             <Button to="/novo-pedido" onClick={scrollToTop}>📸 Orçamento</Button>
             <Button to="/consultar">🔎 Consulta</Button>
@@ -85,8 +91,11 @@ export function Home() {
       </section>
 
       <section className="section work-carousel-section">
-        <div className="section-heading">
-          <h2>Galeria</h2>
+        <div className="section-heading section-heading--inline">
+          <div>
+            <p className="eyebrow">Trabalhos</p>
+            <h2>Galeria</h2>
+          </div>
         </div>
         <div className="work-carousel" aria-live="polite">
           <div className="work-carousel__media">
@@ -133,6 +142,19 @@ export function Home() {
 
           <div className="info-box">
             <div className="info-box__top">
+              <span>Telefone</span>
+              <a className="info-box__link" href="tel:+551733458007">
+                Ligar
+                <svg className="info-box__icon info-box__icon--phone" aria-hidden="true" viewBox="0 0 20 20">
+                  <path d="M6.3 3.5 8 7.2 6.7 8.4c.9 1.8 2.2 3.2 4 4l1.2-1.3 3.7 1.7-.5 3.1c-.1.5-.6.9-1.1.8C7.9 16.1 3.9 12.1 3.3 6c-.1-.5.3-1 .8-1.1l2.2-.4Z" />
+                </svg>
+              </a>
+            </div>
+            <strong>(17) 3345-8007</strong>
+          </div>
+
+          <div className="info-box">
+            <div className="info-box__top">
               <span>Instagram</span>
               <a
                 className="info-box__link"
@@ -165,18 +187,6 @@ export function Home() {
               <span>Horário</span>
             </div>
             <strong>Horário de atendimento será informado</strong>
-          </div>
-          <div className="info-box">
-            <div className="info-box__top">
-              <span>Telefone</span>
-              <a className="info-box__link" href="tel:+551733458007">
-                Ligar
-                <svg className="info-box__icon info-box__icon--phone" aria-hidden="true" viewBox="0 0 20 20">
-                  <path d="M6.3 3.5 8 7.2 6.7 8.4c.9 1.8 2.2 3.2 4 4l1.2-1.3 3.7 1.7-.5 3.1c-.1.5-.6.9-1.1.8C7.9 16.1 3.9 12.1 3.3 6c-.1-.5.3-1 .8-1.1l2.2-.4Z" />
-                </svg>
-              </a>
-            </div>
-            <strong>(17) 3345-8007</strong>
           </div>
           <div className="info-box">
             <div className="info-box__top">
