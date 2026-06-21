@@ -989,6 +989,41 @@ textarea {
   padding: 20px;
 }
 
+.response-page {
+  display: grid;
+  gap: 18px;
+}
+
+.response-summary {
+  display: grid;
+  gap: 8px;
+  border: 1px solid rgba(90, 51, 32, 0.16);
+  border-radius: 8px;
+  padding: 18px;
+  background:
+    linear-gradient(135deg, rgba(240, 196, 107, 0.12), transparent),
+    var(--white);
+  box-shadow: var(--shadow);
+}
+
+.response-summary p {
+  margin: 0;
+}
+
+.response-form {
+  max-width: 720px;
+}
+
+.form-error {
+  margin: 0;
+  border-left: 4px solid var(--danger);
+  border-radius: 0 8px 8px 0;
+  padding: 12px 14px;
+  background: #f9dbd7;
+  color: var(--danger);
+  font-weight: 800;
+}
+
 .result-panel__top,
 .order-card__top,
 .details-title {

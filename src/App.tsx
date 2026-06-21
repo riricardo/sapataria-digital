@@ -6,6 +6,7 @@ import { AdminOrderDetails } from './pages/AdminOrderDetails'
 import { CheckOrder } from './pages/CheckOrder'
 import { Home } from './pages/Home'
 import { NewOrder } from './pages/NewOrder'
+import { RespondOrder } from './pages/RespondOrder'
 import { Shop } from './pages/Shop'
 
 function ScrollToTop() {
@@ -28,6 +29,7 @@ function App() {
         <Route path="/novo-pedido" element={<NewOrder />} />
         <Route path="/consultar" element={<CheckOrder />} />
         <Route path="/loja" element={<Shop />} />
+        <Route path="/responder" element={<RespondOrder />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/admin/pedido/:id" element={<AdminOrderDetails />} />
         <Route path="*" element={<Navigate to="/" replace />} />

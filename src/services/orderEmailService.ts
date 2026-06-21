@@ -5,6 +5,8 @@ const SEND_ORDER_EMAIL_URL =
 
 const ATTACHMENT_IMAGE_TYPE = 'image/jpeg'
 const ATTACHMENT_IMAGE_EXTENSION = 'jpg'
+const ATTACHMENT_MAX_SIZE_BYTES = 350 * 1024
+const ATTACHMENT_MAX_DIMENSION = 1280
 const IMAGE_COMPRESSION_OPTIONS = {
   maxSizeMB: 0.5,
   maxWidthOrHeight: 1600,
@@ -105,28 +107,28 @@ function onlyDigits(value: string) {
   return value.replace(/\D/g, '')
 }
 
-function formatOrderCodeForWhatsApp(orderCode: string) {
-  return orderCode.replace(/[-_./]/g, ' ')
-}
-
-function buildWhatsAppUrl(order: OrderEmailHtmlOrder) {
-  const { orderCode, phone, itemType, serviceDescription } = order
+function buildWhatsAppUrl(phone: string) {
   const digits = onlyDigits(phone)
   if (!digits) {
     return ''
   }
 
   const phoneWithCountryCode = digits.startsWith('55') ? digits : `55${digits}`
-  const readableOrderCode = formatOrderCodeForWhatsApp(orderCode)
-  const message = encodeURIComponent([
-    `Olá! Aqui é da Sapataria Bebedouro.`,
-    `Estou entrando em contato sobre a solicitação ${readableOrderCode}.`,
-    `Item: ${itemType}.`,
-    `Serviço: ${serviceDescription || 'Não informado'}.`,
-    '',
-    'Valor estimado do reparo: R$ ',
-  ].join('\n'))
-  return `https://wa.me/${phoneWithCountryCode}?text=${message}`
+  return `https://wa.me/${phoneWithCountryCode}`
+}
+
+function buildResponseUrl(order: OrderEmailHtmlOrder) {
+  const baseUrl = `${window.location.origin}${window.location.pathname}`
+  const query = new URLSearchParams({
+    orderCode: order.orderCode,
+    customerName: order.customerName,
+    phone: order.phone,
+    itemType: order.itemType,
+    serviceDescription: order.serviceDescription ?? '',
+    problemDescription: order.problemDescription ?? '',
+  })
+
+  return `${baseUrl}#/responder?${query.toString()}`
 }
 
 export function buildOrderEmailHtml(order: OrderEmailHtmlOrder) {
@@ -138,7 +140,8 @@ export function buildOrderEmailHtml(order: OrderEmailHtmlOrder) {
     serviceDescription,
     problemDescription,
   } = order
-  const phoneUrl = buildWhatsAppUrl(order)
+  const phoneUrl = buildWhatsAppUrl(phone)
+  const responseUrl = buildResponseUrl(order)
   const escapedPhone = escapeHtml(phone)
   const phoneContent = phoneUrl
     ? `<a href="${escapeHtml(phoneUrl)}" style="display: inline-block; background: #0f5c2e; color: #fff; padding: 8px 12px; border-radius: 4px; font-weight: bold; text-decoration: none;">Abrir WhatsApp: ${escapedPhone}</a>`
@@ -184,6 +187,12 @@ export function buildOrderEmailHtml(order: OrderEmailHtmlOrder) {
           ${escapeHtml(problemDescription || 'Não informado')}
         </div>
       </section>
+
+      <p style="margin: 24px 0 0;">
+        <a href="${escapeHtml(responseUrl)}" style="display: inline-block; background: #7a3f18; color: #fff; padding: 12px 16px; border-radius: 4px; font-weight: bold; text-decoration: none;">
+          Responder solicitação
+        </a>
+      </p>
     </div>
   `
 }
@@ -206,6 +215,80 @@ function sizeInMB(file: Blob): string {
 function mimeFromDataUrl(dataUrl: string, fallback: string) {
   const match = dataUrl.match(/^data:([^;]+);base64,/)
   return match?.[1] ?? fallback
+}
+
+function dataUrlSizeInBytes(dataUrl: string) {
+  const base64 = dataUrl.split(',')[1] ?? ''
+  return Math.ceil((base64.length * 3) / 4)
+}
+
+function loadImage(dataUrl: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const image = new Image()
+
+    image.onload = () => resolve(image)
+    image.onerror = () => reject(new Error('Não foi possível carregar a imagem selecionada'))
+    image.src = dataUrl
+  })
+}
+
+function canvasToJpegDataUrl(canvas: HTMLCanvasElement, quality: number): Promise<string> {
+  return new Promise((resolve) => {
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          resolve(canvas.toDataURL(ATTACHMENT_IMAGE_TYPE, quality))
+          return
+        }
+
+        readFileAsDataUrl(blob).then(resolve)
+      },
+      ATTACHMENT_IMAGE_TYPE,
+      quality,
+    )
+  })
+}
+
+async function normalizeImageToJpegDataUrl(file: Blob): Promise<{ dataUrl: string; size: number }> {
+  const sourceDataUrl = await readFileAsDataUrl(file)
+  const sourceImage = await loadImage(sourceDataUrl)
+  let scale = Math.min(
+    1,
+    ATTACHMENT_MAX_DIMENSION / Math.max(sourceImage.naturalWidth, sourceImage.naturalHeight),
+  )
+  let quality = 0.82
+
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const width = Math.max(1, Math.round(sourceImage.naturalWidth * scale))
+    const height = Math.max(1, Math.round(sourceImage.naturalHeight * scale))
+    const canvas = document.createElement('canvas')
+    const context = canvas.getContext('2d')
+
+    if (!context) {
+      throw new Error('Não foi possível preparar a imagem')
+    }
+
+    canvas.width = width
+    canvas.height = height
+    context.fillStyle = '#ffffff'
+    context.fillRect(0, 0, width, height)
+    context.drawImage(sourceImage, 0, 0, width, height)
+
+    const dataUrl = await canvasToJpegDataUrl(canvas, quality)
+    const size = dataUrlSizeInBytes(dataUrl)
+
+    if (size <= ATTACHMENT_MAX_SIZE_BYTES || attempt === 7) {
+      return { dataUrl, size }
+    }
+
+    if (quality > 0.58) {
+      quality -= 0.08
+    } else {
+      scale *= 0.82
+    }
+  }
+
+  throw new Error('Não foi possível otimizar a imagem')
 }
 
 function filenameWithMime(filename: string, contentType: string) {
@@ -272,19 +355,21 @@ export async function fileToCompressedAttachment(file: File): Promise<OrderEmail
 export async function fileToCompressedImage(file: File): Promise<CompressedOrderImage> {
   try {
     const compressedFile = await imageCompression(file, IMAGE_COMPRESSION_OPTIONS)
-    const contentBase64 = await readFileAsDataUrl(compressedFile)
+    const normalizedImage = await normalizeImageToJpegDataUrl(compressedFile)
+    const contentBase64 = normalizedImage.dataUrl
     const contentType = mimeFromDataUrl(contentBase64, ATTACHMENT_IMAGE_TYPE)
     const originalSizeMB = sizeInMB(file)
-    const optimizedSizeMB = sizeInMB(compressedFile)
+    const optimizedSizeMB = (normalizedImage.size / 1024 / 1024).toFixed(2)
     const reductionPercent = file.size
-      ? Math.max(0, Math.round(((file.size - compressedFile.size) / file.size) * 100))
+      ? Math.max(0, Math.round(((file.size - normalizedImage.size) / file.size) * 100))
       : 0
 
     console.log('[image-compression]', {
       filename: file.name,
       mimeType: file.type || 'desconhecido',
       originalSizeMB,
-      compressedSizeMB: optimizedSizeMB,
+      compressedSizeMB: sizeInMB(compressedFile),
+      normalizedSizeMB: optimizedSizeMB,
       outputMimeType: contentType,
       reductionPercent,
     })
