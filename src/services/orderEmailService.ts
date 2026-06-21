@@ -23,7 +23,6 @@ export interface OrderEmailHtmlOrder {
   itemType: string
   serviceDescription?: string
   problemDescription?: string
-  exampleDescription?: string
 }
 
 export interface OrderEmailPayload extends OrderEmailHtmlOrder {
@@ -51,8 +50,8 @@ interface OrderEmailResponse {
 }
 
 export function buildOrderEmailTitles(customerName: string) {
-  const subject = `Orçamento para ${customerName}`
-  const title = `Nova solicitação de orçamento de ${customerName}`
+  const subject = `Solicitação de ${customerName}`
+  const title = `Nova solicitação de ${customerName}`
 
   return { subject, title }
 }
@@ -66,7 +65,7 @@ export function buildOrderEmailBody(orderData: {
   problemDescription: string
 }) {
   return [
-    `Nova solicitação de orçamento de ${orderData.customerName}`,
+    `Nova solicitação de ${orderData.customerName}`,
     '',
     'DADOS DO CLIENTE',
     `Nome: ${orderData.customerName}`,
@@ -92,6 +91,21 @@ export function escapeHtml(value = '') {
     .replace(/'/g, '&#039;')
 }
 
+function onlyDigits(value: string) {
+  return value.replace(/\D/g, '')
+}
+
+function buildWhatsAppUrl(phone: string, orderCode: string) {
+  const digits = onlyDigits(phone)
+  if (!digits) {
+    return ''
+  }
+
+  const phoneWithCountryCode = digits.startsWith('55') ? digits : `55${digits}`
+  const message = encodeURIComponent(`Relativo à solicitação ${orderCode}`)
+  return `https://wa.me/${phoneWithCountryCode}?text=${message}`
+}
+
 export function buildOrderEmailHtml(order: OrderEmailHtmlOrder) {
   const {
     orderCode,
@@ -100,8 +114,12 @@ export function buildOrderEmailHtml(order: OrderEmailHtmlOrder) {
     itemType,
     serviceDescription,
     problemDescription,
-    exampleDescription,
   } = order
+  const phoneUrl = buildWhatsAppUrl(phone, orderCode)
+  const escapedPhone = escapeHtml(phone)
+  const phoneContent = phoneUrl
+    ? `<a href="${escapeHtml(phoneUrl)}" style="display: inline-block; background: #0f5c2e; color: #fff; padding: 8px 12px; border-radius: 4px; font-weight: bold; text-decoration: none;">Abrir WhatsApp: ${escapedPhone}</a>`
+    : `<strong style="color: #0f5c2e;">${escapedPhone}</strong>`
 
   return `
     <div style="font-family: Arial, sans-serif; color: #222; line-height: 1.5;">
@@ -121,9 +139,7 @@ export function buildOrderEmailHtml(order: OrderEmailHtmlOrder) {
         </tr>
         <tr>
           <td style="font-weight: bold; border: 1px solid #ddd; background: #f7f3ef;">Telefone</td>
-          <td style="border: 1px solid #ddd;">
-            <strong style="color: #0f5c2e;">${escapeHtml(phone)}</strong>
-          </td>
+          <td style="border: 1px solid #ddd;">${phoneContent}</td>
         </tr>
         <tr>
           <td style="font-weight: bold; border: 1px solid #ddd; background: #f7f3ef;">Tipo do item</td>
@@ -137,15 +153,14 @@ export function buildOrderEmailHtml(order: OrderEmailHtmlOrder) {
             <strong>${escapeHtml(serviceDescription || 'Não informado')}</strong>
           </td>
         </tr>
-        <tr>
-          <td style="font-weight: bold; border: 1px solid #ddd; background: #f7f3ef;">Problema</td>
-          <td style="border: 1px solid #ddd;">${escapeHtml(problemDescription || 'Não informado')}</td>
-        </tr>
-        <tr>
-          <td style="font-weight: bold; border: 1px solid #ddd; background: #f7f3ef;">Referência</td>
-          <td style="border: 1px solid #ddd;">${escapeHtml(exampleDescription || 'Não informado')}</td>
-        </tr>
       </table>
+
+      <section style="width: 100%; max-width: 720px; margin-top: 22px;">
+        <h2 style="margin: 0 0 8px; color: #7a3f18; font-size: 18px;">Problema relatado</h2>
+        <div style="border: 1px solid #ddd; background: #fff; padding: 14px 16px; white-space: pre-line;">
+          ${escapeHtml(problemDescription || 'Não informado')}
+        </div>
+      </section>
     </div>
   `
 }
@@ -211,13 +226,12 @@ function buildOrderEmailApiPayload(orderData: OrderEmailPayload): OrderEmailApiP
     itemType: orderData.itemType,
     serviceDescription: orderData.serviceDescription,
     problemDescription: orderData.problemDescription,
-    exampleDescription: orderData.exampleDescription,
   })
 
   return {
-    subject: `Novo pedido ${orderData.orderCode} - Sapataria Bebedouro`,
+    subject: `Solicitação de ${orderData.customerName}`,
     html,
-    text: `Novo pedido ${orderData.orderCode} de ${orderData.customerName}. Telefone: ${orderData.phone}.`,
+    text: `Solicitação de ${orderData.customerName}. Ordem: ${orderData.orderCode}. Telefone: ${orderData.phone}.`,
     attachments: buildOrderAttachments(orderData),
   }
 }

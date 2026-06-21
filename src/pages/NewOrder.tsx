@@ -575,6 +575,7 @@ export function NewOrder() {
           onClose={closeConfirmation}
         >
           <p className="notice">
+            📒✏️ Anote ou salve o código {createdOrderCode} para consultar sua solicitação depois.
             O orçamento foi enviado para a sapataria. Aguarde o retorno com a avaliação.
           </p>
         </Modal>
