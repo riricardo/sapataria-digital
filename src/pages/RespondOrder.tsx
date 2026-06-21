@@ -43,18 +43,20 @@ export function RespondOrder() {
 
   function buildMessage() {
     return [
-      `Olá 👋 ${order.customerName || 'tudo bem'}! Aqui é da Sapataria Bebedouro.`,
-      `Estou respondendo sobre a solicitação ${formatOrderCodeForWhatsApp(order.orderCode)} 📩`,
+      `Olá 👋 ${order.customerName || 'tudo bem'}!`,
+      `Aqui é da Sapataria Bebedouro.`,
+      `📩 Estou respondendo sobre a solicitação ${formatOrderCodeForWhatsApp(order.orderCode)}`,
       '',
-      `Item: ${order.itemType || 'Não informado'} 👜.`,
-      `Serviço solicitado: ${order.serviceDescription || 'Não informado'} 🔧.`,
-      order.problemDescription ? `Descrição enviada: ${order.problemDescription} 📝.` : '',
+      `Item: ${order.itemType || 'Não informado'}.`,
+      `Serviço solicitado: ${order.serviceDescription || 'Não informado'}.`,
+      order.problemDescription ? `📝 Descrição enviada: ${order.problemDescription}.` : '',
       '',
-      `💰 Valor estimado do reparo: R$ ${serviceValue.trim()}.`,
-      `🔍 Detalhamento do serviço: ${serviceDetails.trim()}.`,
-      `⏳ Prazo estimado (fechando hoje): ${estimatedTime.trim()}.`,
+      `💰 Valor estimado: R$ ${serviceValue.trim()}.`,
+      `🔍 Detalhamento do serviço:`,
+      `${serviceDetails.trim()}.`,
+      `⏳ Prazo estimado (trazendo o item hoje): ${estimatedTime.trim()}.`,
       '',
-      'Se estiver de acordo, podemos dar sequência ao serviço. ✅',
+      '✅ Se estiver de acordo, podemos dar sequência ao serviço.',
     ].filter(Boolean).join('\n')
   }
 
@@ -87,10 +89,6 @@ export function RespondOrder() {
         <div className="section-heading">
           <p className="eyebrow">Responder solicitação</p>
           <h1>Montar resposta para o cliente</h1>
-          <p>
-            Preencha o valor, o detalhamento do serviço e o prazo estimado. O botão final
-            abre o WhatsApp com a mensagem pronta para enviar.
-          </p>
         </div>
 
         {hasOrderData ? (
