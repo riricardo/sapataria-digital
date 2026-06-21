@@ -343,10 +343,13 @@ export function NewOrder() {
         clearImageInputs()
         focusNext(submitRef.current)
       })
-      .catch(() => {
+      .catch((error) => {
         clearImageInputs()
         setShowImageError(true)
-        showToast('Não foi possível preparar a imagem. Tente tirar outra foto ou escolher uma imagem da galeria.', 'error')
+        const message = error instanceof Error
+          ? error.message
+          : 'Não foi possível preparar a imagem. Tente tirar outra foto ou escolher uma imagem da galeria.'
+        showToast(message, 'error')
       })
   }
 
@@ -540,6 +543,7 @@ export function NewOrder() {
             <p>
               Tire fotos do item e da região que precisa de conserto ou restauração. Exemplo:
               sola descolada, zíper da bolsa, costura aberta, imagem religiosa danificada.
+              Use JPG, PNG ou WEBP e evite fotos muito grandes.
             </p>
             <div className="upload-actions">
               <button

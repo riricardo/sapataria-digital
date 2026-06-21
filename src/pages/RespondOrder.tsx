@@ -39,9 +39,43 @@ export function RespondOrder() {
   const [estimatedTime, setEstimatedTime] = useState('')
   const [error, setError] = useState('')
 
+  function onlyDigitsTrimmed(value: string) {
+    return value.replace(/\D/g, '').trim()
+  }
+
+  function formatDateInTimeZoneFromNow(days: number, timeZone = 'America/Sao_Paulo') {
+    if (!Number.isFinite(days) || days <= 0) return ''
+
+    const now = new Date()
+    const fmt = new Intl.DateTimeFormat('en-GB', {
+      timeZone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    })
+    const parts = Object.fromEntries(fmt.formatToParts(now).map(p => [p.type, p.value])) as Record<string, string>
+    const year = Number(parts.year)
+    const month = Number(parts.month)
+    const day = Number(parts.day)
+
+    // Use noon UTC of the current timezone date to avoid day-rollover issues,
+    // then add days and format for the target timezone.
+    const baseUtc = Date.UTC(year, month - 1, day, 12, 0, 0)
+    const future = new Date(baseUtc + days * 24 * 60 * 60 * 1000)
+
+    return new Intl.DateTimeFormat('pt-BR', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(future)
+  }
+
   const hasOrderData = Boolean(order.orderCode && order.customerName && order.phone)
 
   function buildMessage() {
+    const days = Number(estimatedTime.trim()) || 0
+    const dateStr = days ? formatDateInTimeZoneFromNow(days, 'America/Sao_Paulo') : ''
+
     return [
       `Olá 👋 ${order.customerName || 'tudo bem'}!`,
       `Aqui é da Sapataria Bebedouro.`,
@@ -54,7 +88,7 @@ export function RespondOrder() {
       `💰 Valor estimado: R$ ${serviceValue.trim()}.`,
       `🔍 Detalhamento do serviço:`,
       `${serviceDetails.trim()}.`,
-      `⏳ Prazo estimado (trazendo o item hoje): ${estimatedTime.trim()}.`,
+      days ? `⏳ Prazo estimado: ${days} dias (até ${dateStr}).` : '',
       '',
       '✅ Se estiver de acordo, podemos dar sequência ao serviço.',
     ].filter(Boolean).join('\n')
@@ -131,12 +165,17 @@ export function RespondOrder() {
           </label>
 
           <label>
-            Estimativa de prazo se fechar hoje
+            Estimativa de prazo (em dias)
             <input
-              placeholder="Ex.: 3 dias úteis"
+              inputMode="numeric"
+              pattern="\d*"
+              placeholder="Ex.: 3"
               value={estimatedTime}
-              onChange={(event) => setEstimatedTime(event.target.value)}
+              onChange={(event) => setEstimatedTime(onlyDigitsTrimmed(event.target.value))}
             />
+            {estimatedTime ? (
+              <p className="muted">Data prevista: {formatDateInTimeZoneFromNow(Number(estimatedTime), 'America/Sao_Paulo')}</p>
+            ) : null}
           </label>
 
           {error ? <p className="form-error" role="alert">{error}</p> : null}

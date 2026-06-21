@@ -353,8 +353,21 @@ export async function fileToCompressedAttachment(file: File): Promise<OrderEmail
 }
 
 export async function fileToCompressedImage(file: File): Promise<CompressedOrderImage> {
+  let compressedFile = file
+  let compressionError: unknown = null
+
   try {
-    const compressedFile = await imageCompression(file, IMAGE_COMPRESSION_OPTIONS)
+    compressedFile = await imageCompression(file, IMAGE_COMPRESSION_OPTIONS)
+  } catch (error) {
+    compressionError = error
+    console.warn('[image-compression] compress fallback to direct normalize', {
+      filename: file.name,
+      mimeType: file.type || 'desconhecido',
+      error,
+    })
+  }
+
+  try {
     const normalizedImage = await normalizeImageToJpegDataUrl(compressedFile)
     const contentBase64 = normalizedImage.dataUrl
     const contentType = mimeFromDataUrl(contentBase64, ATTACHMENT_IMAGE_TYPE)
@@ -372,6 +385,7 @@ export async function fileToCompressedImage(file: File): Promise<CompressedOrder
       normalizedSizeMB: optimizedSizeMB,
       outputMimeType: contentType,
       reductionPercent,
+      compressionFailed: Boolean(compressionError),
     })
 
     return {
@@ -387,13 +401,14 @@ export async function fileToCompressedImage(file: File): Promise<CompressedOrder
       reductionPercent,
     }
   } catch (error) {
-    console.error('[image-compression] Falha ao comprimir imagem', {
+    console.error('[image-compression] Falha ao preparar imagem', {
       filename: file.name,
       mimeType: file.type || 'desconhecido',
       originalSizeMB: sizeInMB(file),
       error,
+      compressionError,
     })
-    throw new Error('Não foi possível preparar a imagem. Tente outra foto.', {
+    throw new Error('Não foi possível preparar a imagem. Use JPG, PNG ou WEBP e tente uma foto menor.', {
       cause: error,
     })
   }
