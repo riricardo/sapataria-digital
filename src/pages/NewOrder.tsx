@@ -17,7 +17,7 @@ import {
   type OrderEmailAttachment,
 } from '../services/orderEmailService'
 import { createOrder, deleteOrder } from '../services/orderStorage'
-import type { ItemType, Order } from '../types/order'
+import type { ItemType } from '../types/order'
 
 const itemTypes: ItemType[] = [
   'Sapato',
@@ -146,7 +146,7 @@ export function NewOrder() {
     const draft = readDraftState()
     return draft ? { ...draft.form, imageBase64List: [] } : initialState
   })
-  const [createdOrder, setCreatedOrder] = useState<Order | null>(null)
+  const [createdOrderCode, setCreatedOrderCode] = useState<string | null>(null)
   const [imageNames, setImageNames] = useState<string[]>([])
   const [imageAttachments, setImageAttachments] = useState<OrderEmailAttachment[]>([])
   const [toast, setToast] = useState<ToastState | null>(null)
@@ -157,6 +157,8 @@ export function NewOrder() {
   const itemTypeRef = useRef<HTMLSelectElement>(null)
   const serviceRef = useRef<HTMLInputElement>(null)
   const descriptionRef = useRef<HTMLTextAreaElement>(null)
+  const uploadBoxRef = useRef<HTMLDivElement>(null)
+  const uploadButtonRef = useRef<HTMLLabelElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const submitRef = useRef<HTMLButtonElement>(null)
   const navigate = useNavigate()
@@ -214,6 +216,19 @@ export function NewOrder() {
     window.scrollTo({ top: Math.max(top, 0), behavior: 'smooth' })
     window.setTimeout(() => {
       field.focus({ preventScroll: true })
+    }, 260)
+  }
+
+  function revealMissingImage() {
+    const target = uploadBoxRef.current
+    const headerOffset = 150
+    const top = target ? target.getBoundingClientRect().top + window.scrollY - headerOffset : 0
+
+    setShowImageError(true)
+    showToast('Anexe pelo menos uma foto do item para enviar o orçamento.', 'error')
+    window.scrollTo({ top: Math.max(top, 0), behavior: 'smooth' })
+    window.setTimeout(() => {
+      uploadButtonRef.current?.focus({ preventScroll: true })
     }, 260)
   }
 
@@ -308,6 +323,11 @@ export function NewOrder() {
       return
     }
 
+    if (!form.imageBase64List.length || !imageAttachments.length) {
+      revealMissingImage()
+      return
+    }
+
     setIsSubmitting(true)
     const order = createOrder({
       customerName: form.customerName.trim(),
@@ -350,7 +370,8 @@ export function NewOrder() {
         ...(imageBase64 ? { imageBase64 } : {}),
       })
 
-      setCreatedOrder(order)
+      deleteOrder(order.id)
+      setCreatedOrderCode(order.code)
       setShowImageError(false)
       showToast('Orçamento enviado com sucesso.', 'success')
       clearDraftState()
@@ -374,7 +395,7 @@ export function NewOrder() {
   }
 
   function closeConfirmation() {
-    setCreatedOrder(null)
+    setCreatedOrderCode(null)
     navigate('/')
     window.setTimeout(() => {
       window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -476,6 +497,7 @@ export function NewOrder() {
 
           <div
             className={`upload-box form-grid__wide ${showImageError ? 'upload-box--error' : ''}`.trim()}
+            ref={uploadBoxRef}
           >
             <strong>Fotos do item</strong>
             <p>
@@ -485,6 +507,7 @@ export function NewOrder() {
             <label
               className="button button--secondary upload-box__button"
               htmlFor="order-images"
+              ref={uploadButtonRef}
               tabIndex={0}
             >
               📷 Buscar imagem
@@ -537,26 +560,20 @@ export function NewOrder() {
       ) : null}
 
       {isSubmitting ? (
-        <div className="sending-overlay" role="status" aria-live="polite" aria-label="Enviando orçamento">
+        <div className="sending-overlay" role="status" aria-live="polite" aria-label="Enviando solicitação">
           <div className="sending-overlay__panel">
             <span className="hammer-emoji sending-overlay__hammer" aria-hidden="true">🔨</span>
-            <strong>Enviando orçamento</strong>
+            <strong>Enviando solicitação</strong>
             <p>Preparando os dados e avisando a sapataria.</p>
           </div>
         </div>
       ) : null}
 
-      {createdOrder ? (
+      {createdOrderCode ? (
         <Modal
-          title={`Pedido gerado: ${createdOrder.code}`}
+          title={`Pedido gerado: ${createdOrderCode}`}
           onClose={closeConfirmation}
         >
-          <div className="summary-list">
-            <p><strong>Cliente:</strong> {createdOrder.customerName}</p>
-            <p><strong>Item:</strong> {createdOrder.itemType}</p>
-            <p><strong>Serviço:</strong> {createdOrder.service}</p>
-            <p><strong>Descrição:</strong> {createdOrder.description}</p>
-          </div>
           <p className="notice">
             O orçamento foi enviado para a sapataria. Aguarde o retorno com a avaliação.
           </p>

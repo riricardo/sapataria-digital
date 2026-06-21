@@ -14,8 +14,8 @@
   --white: #fffdf8;
   --danger: #a9362f;
   --success: #2f6f4e;
-  --shadow: 0 18px 36px rgba(61, 38, 20, 0.12);
-  --shadow-hover: 0 22px 48px rgba(61, 38, 20, 0.18);
+  --shadow: 0 2px 8px rgba(61, 38, 20, 0.035);
+  --shadow-hover: 0 4px 12px rgba(61, 38, 20, 0.055);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   color: var(--ink);
   background: var(--cream-100);
@@ -68,8 +68,10 @@ button {
   justify-content: space-between;
   gap: 18px;
   padding: 14px clamp(16px, 4vw, 48px);
-  border-bottom: 1px solid rgba(90, 51, 32, 0.16);
-  background: rgba(255, 249, 237, 0.92);
+  border-bottom: 1px solid rgba(90, 51, 32, 0.18);
+  background:
+    linear-gradient(135deg, rgba(245, 234, 214, 0.92), rgba(234, 216, 187, 0.86) 48%, rgba(255, 225, 189, 0.82)),
+    rgba(245, 234, 214, 0.88);
   backdrop-filter: blur(10px);
 }
 
@@ -91,7 +93,7 @@ button {
   color: var(--gold-300);
   font-size: 1.45rem;
   font-weight: 800;
-  box-shadow: 0 10px 20px rgba(45, 27, 18, 0.2);
+  box-shadow: 0 2px 8px rgba(45, 27, 18, 0.08);
 }
 
 .brand strong,
@@ -123,7 +125,7 @@ button {
   min-height: 38px;
   padding: 9px 12px;
   border-radius: 8px;
-  color: var(--muted);
+  color: var(--brown-700);
   font-weight: 700;
   white-space: nowrap;
   text-decoration: none;
@@ -131,7 +133,7 @@ button {
 
 .site-nav a.active,
 .site-nav a:hover {
-  background: var(--cream-200);
+  background: rgba(255, 253, 248, 0.58);
   color: var(--brown-900);
 }
 
@@ -238,7 +240,7 @@ p {
   background:
     linear-gradient(135deg, rgba(255, 225, 189, 0.62), transparent 44%),
     linear-gradient(180deg, var(--white), var(--cream-200));
-  box-shadow: var(--shadow);
+  box-shadow: 0 2px 8px rgba(61, 38, 20, 0.035);
 }
 
 .hero-panel::before {
@@ -395,7 +397,7 @@ p {
   line-height: 1.2;
   text-align: center;
   text-decoration: none;
-  box-shadow: 0 10px 18px rgba(61, 38, 20, 0.08);
+  box-shadow: 0 2px 6px rgba(61, 38, 20, 0.04);
   transition:
     transform 160ms ease,
     box-shadow 160ms ease,
@@ -408,7 +410,7 @@ p {
 }
 
 .button--primary {
-  background: linear-gradient(135deg, var(--gold-300), var(--gold-500));
+  background: linear-gradient(135deg, #f3cf7a, #dba73d);
   color: var(--brown-900);
 }
 
@@ -613,14 +615,14 @@ p {
   color: var(--brown-900);
   font-size: 1.02rem;
   font-weight: 900;
-  box-shadow: var(--shadow);
+  box-shadow: none;
   transition:
-    box-shadow 160ms ease,
+    border-color 160ms ease,
     transform 160ms ease;
 }
 
 .service-item:hover {
-  box-shadow: var(--shadow-hover);
+  border-left-color: var(--brown-500);
   transform: translateY(-2px);
 }
 
@@ -726,7 +728,7 @@ p {
   background: rgba(45, 27, 18, 0.9);
   color: var(--gold-300);
   font-size: 1rem;
-  box-shadow: 0 10px 22px rgba(45, 27, 18, 0.2);
+  box-shadow: 0 2px 8px rgba(45, 27, 18, 0.08);
 }
 
 .shop-card__photo-count {
@@ -739,7 +741,7 @@ p {
   color: var(--brown-700);
   font-size: 0.78rem;
   font-weight: 900;
-  box-shadow: 0 8px 18px rgba(45, 27, 18, 0.14);
+  box-shadow: 0 2px 6px rgba(45, 27, 18, 0.06);
 }
 
 .shop-card__body {
@@ -822,7 +824,7 @@ textarea {
 
 .upload-box--error {
   border-color: rgba(169, 54, 47, 0.46);
-  box-shadow: 0 18px 36px rgba(169, 54, 47, 0.14);
+  box-shadow: 0 2px 8px rgba(169, 54, 47, 0.08);
 }
 
 .upload-box__button {
@@ -865,7 +867,7 @@ textarea {
   border-radius: 999px;
   background: rgba(255, 253, 248, 0.92);
   color: var(--brown-900);
-  box-shadow: 0 6px 14px rgba(45, 27, 18, 0.18);
+  box-shadow: 0 2px 6px rgba(45, 27, 18, 0.08);
 }
 
 .photo-preview-grid__remove svg {
@@ -918,7 +920,7 @@ textarea {
   border-radius: 8px;
   padding: 14px 16px;
   font-weight: 800;
-  box-shadow: 0 18px 42px rgba(45, 27, 18, 0.24);
+  box-shadow: 0 4px 14px rgba(45, 27, 18, 0.1);
   backdrop-filter: blur(8px);
 }
 
@@ -956,7 +958,7 @@ textarea {
   border-radius: 8px;
   padding: 24px 22px;
   background: var(--white);
-  box-shadow: 0 24px 60px rgba(45, 27, 18, 0.32);
+  box-shadow: 0 6px 18px rgba(45, 27, 18, 0.12);
   text-align: center;
 }
 
@@ -1036,7 +1038,7 @@ textarea {
 .segmented-control button.is-active {
   background: var(--white);
   color: var(--brown-900);
-  box-shadow: 0 8px 16px rgba(61, 38, 20, 0.1);
+  box-shadow: 0 2px 6px rgba(61, 38, 20, 0.05);
 }
 
 .results-list {
@@ -1231,7 +1233,7 @@ textarea {
   overflow: auto;
   border-radius: 8px;
   background: var(--white);
-  box-shadow: 0 24px 60px rgba(45, 27, 18, 0.32);
+  box-shadow: 0 6px 18px rgba(45, 27, 18, 0.12);
 }
 
 .modal__header {
