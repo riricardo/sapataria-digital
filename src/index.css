@@ -828,7 +828,33 @@ textarea {
 }
 
 .upload-box__button {
+  min-height: 52px;
+  cursor: pointer;
+}
+
+.upload-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.image-optimization {
+  display: grid;
+  gap: 4px;
   width: fit-content;
+  max-width: 100%;
+  border: 1px solid rgba(47, 111, 78, 0.16);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: rgba(223, 242, 232, 0.72);
+  color: var(--success);
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.photo-preview-grid__remove-text {
+  width: 100%;
+  min-height: 42px;
   cursor: pointer;
 }
 
@@ -1365,6 +1391,10 @@ textarea {
   .admin-actions .button,
   .form-actions .button {
     width: 100%;
+  }
+
+  .upload-actions {
+    grid-template-columns: 1fr;
   }
 
   .modal__actions {

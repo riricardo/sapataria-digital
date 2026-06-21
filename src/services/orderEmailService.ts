@@ -3,17 +3,27 @@ import imageCompression from 'browser-image-compression'
 const SEND_ORDER_EMAIL_URL =
   'https://sapataria-digital-api-fb596c9604ae.herokuapp.com/api/email/send'
 
+const ATTACHMENT_IMAGE_TYPE = 'image/jpeg'
+const ATTACHMENT_IMAGE_EXTENSION = 'jpg'
 const IMAGE_COMPRESSION_OPTIONS = {
   maxSizeMB: 0.5,
   maxWidthOrHeight: 1600,
   useWebWorker: true,
   initialQuality: 0.85,
+  fileType: ATTACHMENT_IMAGE_TYPE,
 }
 
 export interface OrderEmailAttachment {
   filename: string
   contentType: string
   contentBase64: string
+}
+
+export interface CompressedOrderImage {
+  attachment: OrderEmailAttachment
+  originalSizeMB: string
+  optimizedSizeMB: string
+  reductionPercent: number
 }
 
 export interface OrderEmailHtmlOrder {
@@ -200,6 +210,11 @@ function filenameWithMime(filename: string, contentType: string) {
   return `${nameWithoutExtension}.${extension}`
 }
 
+function attachmentFilename(filename: string) {
+  const nameWithoutExtension = filename.replace(/\.[^.]+$/, '') || 'imagem'
+  return `${nameWithoutExtension}.${ATTACHMENT_IMAGE_EXTENSION}`
+}
+
 function buildOrderAttachments(orderData: OrderEmailPayload): OrderEmailAttachment[] {
   if (orderData.attachments?.length) {
     return orderData.attachments
@@ -237,25 +252,41 @@ function buildOrderEmailApiPayload(orderData: OrderEmailPayload): OrderEmailApiP
 }
 
 export async function fileToCompressedAttachment(file: File): Promise<OrderEmailAttachment> {
+  const compressedImage = await fileToCompressedImage(file)
+  return compressedImage.attachment
+}
+
+export async function fileToCompressedImage(file: File): Promise<CompressedOrderImage> {
   try {
     const compressedFile = await imageCompression(file, IMAGE_COMPRESSION_OPTIONS)
     const contentBase64 = await readFileAsDataUrl(compressedFile)
-    const contentType = mimeFromDataUrl(
-      contentBase64,
-      compressedFile.type || file.type || 'image/jpeg',
-    )
+    const contentType = mimeFromDataUrl(contentBase64, ATTACHMENT_IMAGE_TYPE)
+    const originalSizeMB = sizeInMB(file)
+    const optimizedSizeMB = sizeInMB(compressedFile)
+    const reductionPercent = file.size
+      ? Math.max(0, Math.round(((file.size - compressedFile.size) / file.size) * 100))
+      : 0
 
     console.log('[image-compression]', {
       filename: file.name,
       mimeType: file.type || 'desconhecido',
-      originalSizeMB: sizeInMB(file),
-      compressedSizeMB: sizeInMB(compressedFile),
+      originalSizeMB,
+      compressedSizeMB: optimizedSizeMB,
+      outputMimeType: contentType,
+      reductionPercent,
     })
 
     return {
-      filename: filenameWithMime(file.name, contentType),
-      contentType,
-      contentBase64,
+      attachment: {
+        filename: contentType === ATTACHMENT_IMAGE_TYPE
+          ? attachmentFilename(file.name)
+          : filenameWithMime(file.name, contentType),
+        contentType: contentType || ATTACHMENT_IMAGE_TYPE,
+        contentBase64,
+      },
+      originalSizeMB,
+      optimizedSizeMB,
+      reductionPercent,
     }
   } catch (error) {
     console.error('[image-compression] Falha ao comprimir imagem', {
@@ -264,7 +295,7 @@ export async function fileToCompressedAttachment(file: File): Promise<OrderEmail
       originalSizeMB: sizeInMB(file),
       error,
     })
-    throw new Error('Não foi possível preparar a imagem. Tente outra foto ou envie sem imagem.', {
+    throw new Error('Não foi possível preparar a imagem. Tente outra foto.', {
       cause: error,
     })
   }
