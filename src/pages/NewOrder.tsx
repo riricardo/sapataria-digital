@@ -293,6 +293,11 @@ export function NewOrder() {
   }
 
   function openCamera() {
+    if (imageAttachments.length >= MAX_IMAGE_COUNT) {
+      showToast(`Use no máximo ${MAX_IMAGE_COUNT} fotos por pedido.`, 'error')
+      return
+    }
+
     if (cameraInputRef.current) {
       cameraInputRef.current.value = ''
       cameraInputRef.current.click()
@@ -300,6 +305,11 @@ export function NewOrder() {
   }
 
   function openGallery() {
+    if (imageAttachments.length >= MAX_IMAGE_COUNT) {
+      showToast(`Use no máximo ${MAX_IMAGE_COUNT} fotos por pedido.`, 'error')
+      return
+    }
+
     if (galleryInputRef.current) {
       galleryInputRef.current.value = ''
       galleryInputRef.current.click()
@@ -595,6 +605,7 @@ export function NewOrder() {
                 ref={cameraButtonRef}
                 type="button"
                 onClick={openCamera}
+                disabled={imageAttachments.length >= MAX_IMAGE_COUNT}
               >
                 📷 Tirar Foto
               </button>
@@ -602,6 +613,7 @@ export function NewOrder() {
                 className="button button--secondary upload-box__button"
                 type="button"
                 onClick={openGallery}
+                disabled={imageAttachments.length >= MAX_IMAGE_COUNT}
               >
                 🖼️ Escolher da Galeria
               </button>

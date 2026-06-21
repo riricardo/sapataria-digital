@@ -1,19 +1,11 @@
-import imageCompression from 'browser-image-compression'
-
 const SEND_ORDER_EMAIL_URL =
   'https://sapataria-digital-api-fb596c9604ae.herokuapp.com/api/email/send'
 
+// @ts-ignore
+import pica from 'pica'
+
 const ATTACHMENT_IMAGE_TYPE = 'image/jpeg'
-const ATTACHMENT_IMAGE_EXTENSION = 'jpg'
-const ATTACHMENT_MAX_SIZE_BYTES = 350 * 1024
 const ATTACHMENT_MAX_DIMENSION = 1280
-const IMAGE_COMPRESSION_OPTIONS = {
-  maxSizeMB: 0.5,
-  maxWidthOrHeight: 1600,
-  useWebWorker: true,
-  initialQuality: 0.85,
-  fileType: ATTACHMENT_IMAGE_TYPE,
-}
 
 export interface OrderEmailAttachment {
   filename: string
@@ -241,65 +233,6 @@ async function readFileAsAttachment(file: Blob): Promise<{ dataUrl: string; size
   return { dataUrl, size: dataUrlSizeInBytes(dataUrl) }
 }
 
-function canvasToJpegDataUrl(canvas: HTMLCanvasElement, quality: number): Promise<string> {
-  return new Promise((resolve) => {
-    canvas.toBlob(
-      (blob) => {
-        if (!blob) {
-          resolve(canvas.toDataURL(ATTACHMENT_IMAGE_TYPE, quality))
-          return
-        }
-
-        readFileAsDataUrl(blob).then(resolve)
-      },
-      ATTACHMENT_IMAGE_TYPE,
-      quality,
-    )
-  })
-}
-
-async function normalizeImageToJpegDataUrl(file: Blob): Promise<{ dataUrl: string; size: number }> {
-  const sourceDataUrl = await readFileAsDataUrl(file)
-  const sourceImage = await loadImage(sourceDataUrl)
-  let scale = Math.min(
-    1,
-    ATTACHMENT_MAX_DIMENSION / Math.max(sourceImage.naturalWidth, sourceImage.naturalHeight),
-  )
-  let quality = 0.82
-
-  for (let attempt = 0; attempt < 8; attempt += 1) {
-    const width = Math.max(1, Math.round(sourceImage.naturalWidth * scale))
-    const height = Math.max(1, Math.round(sourceImage.naturalHeight * scale))
-    const canvas = document.createElement('canvas')
-    const context = canvas.getContext('2d')
-
-    if (!context) {
-      throw new Error('Não foi possível preparar a imagem')
-    }
-
-    canvas.width = width
-    canvas.height = height
-    context.fillStyle = '#ffffff'
-    context.fillRect(0, 0, width, height)
-    context.drawImage(sourceImage, 0, 0, width, height)
-
-    const dataUrl = await canvasToJpegDataUrl(canvas, quality)
-    const size = dataUrlSizeInBytes(dataUrl)
-
-    if (size <= ATTACHMENT_MAX_SIZE_BYTES || attempt === 7) {
-      return { dataUrl, size }
-    }
-
-    if (quality > 0.58) {
-      quality -= 0.08
-    } else {
-      scale *= 0.82
-    }
-  }
-
-  throw new Error('Não foi possível otimizar a imagem')
-}
-
 function filenameWithMime(filename: string, contentType: string) {
   const nameWithoutExtension = filename.replace(/\.[^.]+$/, '') || 'imagem'
   const extensionByMime: Record<string, string> = {
@@ -313,11 +246,6 @@ function filenameWithMime(filename: string, contentType: string) {
   const extension = extensionByMime[contentType] ?? 'jpg'
 
   return `${nameWithoutExtension}.${extension}`
-}
-
-function attachmentFilename(filename: string) {
-  const nameWithoutExtension = filename.replace(/\.[^.]+$/, '') || 'imagem'
-  return `${nameWithoutExtension}.${ATTACHMENT_IMAGE_EXTENSION}`
 }
 
 function buildOrderAttachments(orderData: OrderEmailPayload): OrderEmailAttachment[] {
@@ -358,120 +286,78 @@ function buildOrderEmailApiPayload(orderData: OrderEmailPayload): OrderEmailApiP
 }
 
 export async function fileToCompressedAttachment(file: File): Promise<OrderEmailAttachment> {
-  const compressedImage = await fileToCompressedImage(file)
-  return compressedImage.attachment
+  const attachment = await fileToCompressedImage(file)
+  return attachment.attachment
 }
 
 export async function fileToCompressedImage(file: File): Promise<CompressedOrderImage> {
-  if (file.type === ATTACHMENT_IMAGE_TYPE && file.size <= ATTACHMENT_MAX_SIZE_BYTES) {
-    const originalAttachment = await readFileAsAttachment(file)
-
-    return {
-      attachment: {
-        filename: attachmentFilename(file.name),
-        contentType: file.type || ATTACHMENT_IMAGE_TYPE,
-        contentBase64: originalAttachment.dataUrl,
-      },
-      originalSizeMB: sizeInMB(file),
-      optimizedSizeMB: sizeInMB(file),
-      reductionPercent: 0,
-    }
-  }
-
-  let compressedFile = file
-  let compressionError: unknown = null
-
   try {
-    compressedFile = await imageCompression(file, IMAGE_COMPRESSION_OPTIONS)
-  } catch (error) {
-    compressionError = error
-    console.warn('[image-compression] compress fallback to direct normalize', {
-      filename: file.name,
-      mimeType: file.type || 'desconhecido',
-      error,
-    })
-  }
+    let inputBlob: Blob = file
+    let inputDataUrl = await readFileAsDataUrl(inputBlob)
 
-  try {
-    const normalizedImage = await normalizeImageToJpegDataUrl(compressedFile)
-    const contentBase64 = normalizedImage.dataUrl
-    const contentType = mimeFromDataUrl(contentBase64, ATTACHMENT_IMAGE_TYPE)
+    // Note: HEIC/HEIF browser conversion is not available here; pica will handle
+    // resizing for JPEG/PNG/WebP. If HEIC needs support, prefer server-side `sharp`.
+
+    const sourceImage = await loadImage(inputDataUrl)
+    const maxSide = Math.max(sourceImage.naturalWidth, sourceImage.naturalHeight)
+    const scale = maxSide > ATTACHMENT_MAX_DIMENSION ? ATTACHMENT_MAX_DIMENSION / maxSide : 1
+    const width = Math.max(1, Math.round(sourceImage.naturalWidth * scale))
+    const height = Math.max(1, Math.round(sourceImage.naturalHeight * scale))
+
+    const srcCanvas = document.createElement('canvas')
+    srcCanvas.width = sourceImage.naturalWidth
+    srcCanvas.height = sourceImage.naturalHeight
+    const sctx = srcCanvas.getContext('2d')
+    if (!sctx) throw new Error('Não foi possível preparar a imagem')
+    sctx.drawImage(sourceImage, 0, 0)
+
+    const dstCanvas = document.createElement('canvas')
+    dstCanvas.width = width
+    dstCanvas.height = height
+
+    // @ts-ignore
+    const p = pica()
+    // Resize using pica for stable high-quality results
+    // @ts-ignore
+    await p.resize(srcCanvas, dstCanvas, { quality: 3 })
+    // @ts-ignore
+    const blob = await p.toBlob(dstCanvas, ATTACHMENT_IMAGE_TYPE, 0.86)
+    const dataUrl = await readFileAsDataUrl(blob)
+    const size = dataUrlSizeInBytes(dataUrl)
     const originalSizeMB = sizeInMB(file)
-    const optimizedSizeMB = (normalizedImage.size / 1024 / 1024).toFixed(2)
-    const reductionPercent = file.size
-      ? Math.max(0, Math.round(((file.size - normalizedImage.size) / file.size) * 100))
-      : 0
-
-    console.log('[image-compression]', {
-      filename: file.name,
-      mimeType: file.type || 'desconhecido',
-      originalSizeMB,
-      compressedSizeMB: sizeInMB(compressedFile),
-      normalizedSizeMB: optimizedSizeMB,
-      outputMimeType: contentType,
-      reductionPercent,
-      compressionFailed: Boolean(compressionError),
-    })
+    const optimizedSizeMB = (size / 1024 / 1024).toFixed(2)
+    const reductionPercent = file.size ? Math.max(0, Math.round(((file.size - size) / file.size) * 100)) : 0
 
     return {
       attachment: {
-        filename: contentType === ATTACHMENT_IMAGE_TYPE
-          ? attachmentFilename(file.name)
-          : filenameWithMime(file.name, contentType),
-        contentType: contentType || ATTACHMENT_IMAGE_TYPE,
-        contentBase64,
+        filename: filenameWithMime(file.name, ATTACHMENT_IMAGE_TYPE),
+        contentType: ATTACHMENT_IMAGE_TYPE,
+        contentBase64: dataUrl,
       },
       originalSizeMB,
       optimizedSizeMB,
       reductionPercent,
     }
   } catch (error) {
-    console.warn('[image-compression] normalize failed', {
+    console.warn('[image-processing] conversion/resizing failed, using original file as fallback', {
       filename: file.name,
       mimeType: file.type || 'desconhecido',
       error,
-      compressionError,
     })
 
-    const supportedRawFallback = file.type === ATTACHMENT_IMAGE_TYPE
-      || file.type === 'image/png'
-      || file.type === 'image/webp'
+    const originalAttachment = await readFileAsAttachment(file)
+    const contentType = mimeFromDataUrl(originalAttachment.dataUrl, file.type || ATTACHMENT_IMAGE_TYPE)
 
-    if (supportedRawFallback) {
-      try {
-        const originalAttachment = await readFileAsAttachment(file)
-        const contentType = mimeFromDataUrl(originalAttachment.dataUrl, ATTACHMENT_IMAGE_TYPE)
-        const originalSizeMB = sizeInMB(file)
-
-        return {
-          attachment: {
-            filename: filenameWithMime(file.name, contentType),
-            contentType,
-            contentBase64: originalAttachment.dataUrl,
-          },
-          originalSizeMB,
-          optimizedSizeMB: originalSizeMB,
-          reductionPercent: 0,
-        }
-      } catch (fallbackError) {
-        console.error('[image-compression] Falha no fallback de imagem original', {
-          filename: file.name,
-          mimeType: file.type || 'desconhecido',
-          error: fallbackError,
-          compressionError,
-        })
-        throw new Error('Não foi possível preparar a imagem. Use JPG, PNG ou WEBP e tente novamente.', {
-          cause: fallbackError,
-        })
-      }
-    }
-
-    throw new Error(
-      'Não foi possível preparar a imagem. Escolha JPG, PNG ou WEBP ou tire a foto diretamente com a câmera.',
-      {
-        cause: error,
+    return {
+      attachment: {
+        filename: filenameWithMime(file.name, contentType),
+        contentType,
+        contentBase64: originalAttachment.dataUrl,
       },
-    )
+      originalSizeMB: sizeInMB(file),
+      optimizedSizeMB: sizeInMB(file),
+      reductionPercent: 0,
+    }
   }
 }
 

@@ -457,6 +457,25 @@ p {
   color: var(--brown-900);
 }
 
+/* Upload buttons disabled state */
+.upload-box__button[disabled],
+.upload-box__button:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  background: linear-gradient(180deg, rgba(255,253,248,0.92), rgba(245,234,214,0.86));
+  border-color: rgba(90, 51, 32, 0.06);
+  color: rgba(45, 27, 18, 0.38);
+}
+
+.upload-box__limit {
+  display: inline-block;
+  margin-left: 8px;
+  color: var(--danger);
+  font-weight: 800;
+}
+
 .button--danger {
   background: var(--danger);
   color: white;
