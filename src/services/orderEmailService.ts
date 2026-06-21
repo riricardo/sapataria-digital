@@ -232,6 +232,11 @@ function loadImage(dataUrl: string): Promise<HTMLImageElement> {
   })
 }
 
+async function readFileAsAttachment(file: Blob): Promise<{ dataUrl: string; size: number }> {
+  const dataUrl = await readFileAsDataUrl(file)
+  return { dataUrl, size: dataUrlSizeInBytes(dataUrl) }
+}
+
 function canvasToJpegDataUrl(canvas: HTMLCanvasElement, quality: number): Promise<string> {
   return new Promise((resolve) => {
     canvas.toBlob(
@@ -401,16 +406,39 @@ export async function fileToCompressedImage(file: File): Promise<CompressedOrder
       reductionPercent,
     }
   } catch (error) {
-    console.error('[image-compression] Falha ao preparar imagem', {
+    console.warn('[image-compression] normalize failed, using original file as fallback', {
       filename: file.name,
       mimeType: file.type || 'desconhecido',
-      originalSizeMB: sizeInMB(file),
       error,
       compressionError,
     })
-    throw new Error('Não foi possível preparar a imagem. Use JPG, PNG ou WEBP e tente uma foto menor.', {
-      cause: error,
-    })
+
+    try {
+      const originalAttachment = await readFileAsAttachment(file)
+      const contentType = mimeFromDataUrl(originalAttachment.dataUrl, ATTACHMENT_IMAGE_TYPE)
+      const originalSizeMB = sizeInMB(file)
+
+      return {
+        attachment: {
+          filename: filenameWithMime(file.name, contentType),
+          contentType,
+          contentBase64: originalAttachment.dataUrl,
+        },
+        originalSizeMB,
+        optimizedSizeMB: originalSizeMB,
+        reductionPercent: 0,
+      }
+    } catch (fallbackError) {
+      console.error('[image-compression] Falha no fallback de imagem original', {
+        filename: file.name,
+        mimeType: file.type || 'desconhecido',
+        error: fallbackError,
+        compressionError,
+      })
+      throw new Error('Não foi possível preparar a imagem. Use JPG, PNG ou WEBP e tente uma foto menor.', {
+        cause: fallbackError,
+      })
+    }
   }
 }
 
