@@ -9,16 +9,17 @@ export function Header() {
 
   return (
     <header className="site-header">
-      <NavLink className="brand" to="/" aria-label="Ir para o inicio" onClick={scrollToTop}>
+      <NavLink className="brand" to="/" aria-label="Ir para o início" onClick={scrollToTop}>
         <span className="brand__mark" aria-hidden="true">👞</span>
         <span>
           <strong>SAPATARIA BEBEDOURO</strong>
-          <small>Consertos com capricho ✨</small>
+          <small>Consertos e restaurações ✨</small>
         </span>
       </NavLink>
-      <nav className="site-nav" aria-label="Navegacao principal">
-        <NavLink to="/novo-pedido">🧾 Orçamento</NavLink>
+      <nav className="site-nav" aria-label="Navegação principal">
+        <NavLink to="/novo-pedido" onClick={scrollToTop}>🧾 Orçamento</NavLink>
         <NavLink to="/consultar">🔎 Consulta</NavLink>
+        <NavLink to="/loja">🛍️ Loja</NavLink>
       </nav>
     </header>
   )

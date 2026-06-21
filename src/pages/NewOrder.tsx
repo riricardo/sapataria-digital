@@ -18,7 +18,16 @@ import {
 import { createOrder, deleteOrder } from '../services/orderStorage'
 import type { ItemType, Order } from '../types/order'
 
-const itemTypes: ItemType[] = ['Sapato', 'Bolsa', 'Cinto', 'Jaqueta', 'Outro']
+const itemTypes: ItemType[] = [
+  'Sapato',
+  'Bolsa',
+  'Cinto',
+  'Jaqueta',
+  'Imagem religiosa',
+  'Artigo religioso',
+  'Artesanato',
+  'Outro',
+]
 const serviceSuggestions = [
   'Troca de sola',
   'Troca de salto',
@@ -27,6 +36,11 @@ const serviceSuggestions = [
   'Reforma de couro',
   'Ajuste de cinto',
   'Limpeza e hidratação',
+  'Restauração de imagem religiosa',
+  'Restauração de artigo religioso',
+  'Pintura e acabamento artesanal',
+  'Reparo em peça de artesanato',
+  'Colagem ou reconstituição de peça',
 ]
 
 interface FormState {
@@ -297,8 +311,8 @@ export function NewOrder() {
           <p className="eyebrow">🧾 Novo orçamento</p>
           <h1>Solicitar orçamento</h1>
           <p>
-            Preencha o essencial e anexe pelo menos uma foto da parte que precisa de conserto.
-            Depois envie o resumo para a sapataria avaliar e responder.
+            Preencha o essencial e anexe pelo menos uma foto da parte que precisa de conserto
+            ou restauração. Depois envie o resumo para a sapataria avaliar e responder.
           </p>
         </div>
 
@@ -360,7 +374,7 @@ export function NewOrder() {
               value={form.service}
               onChange={(event) => updateField('service', event.target.value)}
               onKeyDown={(event) => handleNextKey(event, descriptionRef.current)}
-              placeholder="Ex.: Trocar zíper"
+              placeholder="Ex.: Trocar zíper, restaurar imagem religiosa"
             />
             <datalist id="services">
               {serviceSuggestions.map((service) => (
@@ -389,8 +403,8 @@ export function NewOrder() {
           >
             <strong>Fotos do item</strong>
             <p>
-              Tire fotos do item e da região que precisa de conserto. Exemplo: sola descolada, salto
-              quebrado, zíper da bolsa, costura aberta.
+              Tire fotos do item e da região que precisa de conserto ou restauração. Exemplo:
+              sola descolada, zíper da bolsa, costura aberta, imagem religiosa danificada.
             </p>
             <label
               className="button button--secondary upload-box__button"

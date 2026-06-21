@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 700" role="img" aria-labelledby="title desc">
+  <title id="title">Terço artesanal</title>
+  <desc id="desc">Imagem de exemplo para produto da loja.</desc>
+  <rect width="900" height="700" fill="#f5ead6"/>
+  <path d="M450 172c120 0 218 92 218 206s-98 206-218 206-218-92-218-206 98-206 218-206Z" fill="none" stroke="#8b5a2b" stroke-width="22" stroke-dasharray="8 28" stroke-linecap="round"/>
+  <path d="M450 428v120M398 500h104" stroke="#5a3320" stroke-width="28" stroke-linecap="round"/>
+  <circle cx="450" cy="376" r="42" fill="#d59b2d"/>
+  <text x="80" y="108" fill="#2d1b12" font-family="Arial, sans-serif" font-size="46" font-weight="700">Produto exemplo</text>
+  <text x="80" y="160" fill="#705f50" font-family="Arial, sans-serif" font-size="26">Substitua por uma foto real</text>
+</svg>

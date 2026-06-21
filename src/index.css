@@ -274,6 +274,56 @@ p {
   white-space: nowrap;
 }
 
+.work-carousel-section {
+  padding-top: 10px;
+}
+
+.work-carousel {
+  position: relative;
+  display: grid;
+  border: 1px solid rgba(90, 51, 32, 0.16);
+  border-radius: 8px;
+  background: var(--white);
+  box-shadow: var(--shadow);
+}
+
+.work-carousel__media {
+  min-height: clamp(280px, 45vw, 460px);
+  background: var(--cream-200);
+}
+
+.work-carousel__media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.work-carousel__dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 16px;
+  border-top: 1px solid rgba(90, 51, 32, 0.12);
+  background: rgba(255, 253, 248, 0.84);
+}
+
+.work-carousel__dots button {
+  width: 34px;
+  height: 10px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(90, 51, 32, 0.18);
+  transition:
+    background-color 160ms ease,
+    width 160ms ease;
+}
+
+.work-carousel__dots button.is-active {
+  width: 52px;
+  background: #4d4d4d;
+}
+
 .button-row,
 .form-actions,
 .admin-actions {
@@ -346,7 +396,7 @@ p {
 }
 
 .info-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
 .info-box,
@@ -364,14 +414,85 @@ p {
 .info-box {
   position: relative;
   overflow: hidden;
-  padding: 18px;
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  padding: 16px;
+}
+
+.info-box__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 24px;
 }
 
 .info-box span {
   display: block;
-  margin-bottom: 8px;
   color: var(--muted);
   font-size: 0.9rem;
+}
+
+.info-box strong {
+  display: block;
+  line-height: 1.35;
+}
+
+.info-box__link {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 6px;
+  color: var(--brown-700);
+  font-weight: 800;
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+.info-box__icon {
+  width: 24px;
+  height: 24px;
+  padding: 4px;
+  border-radius: 999px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+  transition:
+    background-color 160ms ease,
+    transform 160ms ease;
+}
+
+.info-box__icon--maps {
+  background: rgba(234, 67, 53, 0.12);
+  fill: #ea4335;
+  stroke: #ea4335;
+}
+
+.info-box__icon--maps circle {
+  fill: var(--white);
+  stroke: var(--white);
+}
+
+.info-box__icon--instagram {
+  background: transparent;
+  fill: none;
+  stroke: url("#instagram-icon-gradient");
+}
+
+.info-box__icon--instagram circle:last-child {
+  fill: url("#instagram-icon-gradient");
+  stroke: none;
+}
+
+.info-box__icon--phone {
+  background: rgba(47, 111, 78, 0.12);
+  fill: #2f6f4e;
+  stroke: #2f6f4e;
+}
+
+.info-box__link:hover .info-box__icon {
+  transform: translate(1px, -1px);
 }
 
 .service-list {
@@ -421,6 +542,63 @@ p {
   color: var(--brown-900);
   font-size: 1.2rem;
   box-shadow: none;
+}
+
+.shop-page {
+  padding-bottom: 36px;
+}
+
+.shop-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.shop-card {
+  overflow: hidden;
+  display: grid;
+  border: 1px solid rgba(90, 51, 32, 0.16);
+  border-radius: 8px;
+  background: var(--white);
+  box-shadow: var(--shadow);
+  transition:
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.shop-card:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-2px);
+}
+
+.shop-card img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  background: var(--cream-200);
+}
+
+.shop-card__body {
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+}
+
+.shop-card h2 {
+  margin-bottom: 8px;
+  font-size: 1.18rem;
+  line-height: 1.2;
+}
+
+.shop-card p {
+  margin-bottom: 0;
+  font-size: 0.94rem;
+  line-height: 1.5;
+}
+
+.shop-card strong {
+  color: var(--brown-900);
+  font-size: 1.3rem;
 }
 
 .form-page {
@@ -904,7 +1082,7 @@ textarea {
 
   .site-nav {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     margin-left: 0;
   }
 
@@ -917,6 +1095,7 @@ textarea {
   }
 
   .hero-section,
+  .work-carousel,
   .info-grid,
   .form-grid,
   .details-layout {
@@ -926,6 +1105,10 @@ textarea {
   .hero-section {
     min-height: auto;
     padding-top: 32px;
+  }
+
+  .work-carousel__media {
+    min-height: 260px;
   }
 
   .admin-form {

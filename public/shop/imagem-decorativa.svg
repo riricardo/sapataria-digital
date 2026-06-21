@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 700" role="img" aria-labelledby="title desc">
+  <title id="title">Imagem decorativa</title>
+  <desc id="desc">Imagem de exemplo para produto da loja.</desc>
+  <rect width="900" height="700" fill="#dff2e8"/>
+  <circle cx="450" cy="225" r="86" fill="#f0c46b"/>
+  <path d="M450 160v130M386 225h128" stroke="#8b5a2b" stroke-width="18" stroke-linecap="round"/>
+  <path d="M305 590c22-145 72-245 145-245s123 100 145 245H305Z" fill="#5a3320"/>
+  <path d="M372 590c12-72 38-125 78-125s66 53 78 125H372Z" fill="#d59b2d"/>
+  <text x="80" y="108" fill="#2d1b12" font-family="Arial, sans-serif" font-size="46" font-weight="700">Produto exemplo</text>
+  <text x="80" y="160" fill="#705f50" font-family="Arial, sans-serif" font-size="26">Substitua por uma foto real</text>
+</svg>

@@ -115,6 +115,18 @@ export function createDemoOrders(): Order[] {
       createdAt: now.toISOString(),
       updatedAt: now.toISOString(),
     },
+    {
+      id: crypto.randomUUID(),
+      code: '2026-06-19-003',
+      customerName: 'Ana Paula',
+      phone: '17 97777-0303',
+      itemType: 'Imagem religiosa',
+      service: 'Restauração de imagem religiosa',
+      description: 'A imagem está com a pintura desgastada e uma pequena lasca na base.',
+      status: 'em_analise',
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString(),
+    },
   ]
 
   saveOrders(demoOrders)

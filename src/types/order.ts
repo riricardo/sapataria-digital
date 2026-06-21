@@ -8,7 +8,15 @@ export type OrderStatus =
   | 'entregue'
   | 'cancelado'
 
-export type ItemType = 'Sapato' | 'Bolsa' | 'Cinto' | 'Jaqueta' | 'Outro'
+export type ItemType =
+  | 'Sapato'
+  | 'Bolsa'
+  | 'Cinto'
+  | 'Jaqueta'
+  | 'Imagem religiosa'
+  | 'Artigo religioso'
+  | 'Artesanato'
+  | 'Outro'
 
 export interface Order {
   id: string

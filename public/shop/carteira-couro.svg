@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 700" role="img" aria-labelledby="title desc">
+  <title id="title">Carteira de couro</title>
+  <desc id="desc">Imagem de exemplo para produto da loja.</desc>
+  <rect width="900" height="700" fill="#fff9ed"/>
+  <rect x="155" y="220" width="590" height="310" rx="38" fill="#5a3320"/>
+  <rect x="200" y="270" width="500" height="210" rx="24" fill="#8b5a2b"/>
+  <path d="M205 336h490" stroke="#d59b2d" stroke-width="18" stroke-linecap="round"/>
+  <circle cx="620" cy="385" r="35" fill="#f0c46b"/>
+  <text x="80" y="108" fill="#2d1b12" font-family="Arial, sans-serif" font-size="46" font-weight="700">Produto exemplo</text>
+  <text x="80" y="160" fill="#705f50" font-family="Arial, sans-serif" font-size="26">Substitua por uma foto real</text>
+</svg>

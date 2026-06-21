@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 720" role="img" aria-labelledby="title desc">
+  <title id="title">Imagem de exemplo para restauração religiosa</title>
+  <desc id="desc">Ilustração simples de uma peça religiosa em restauração.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop stop-color="#fff9ed"/>
+      <stop offset="1" stop-color="#dff2e8"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="720" fill="url(#bg)"/>
+  <circle cx="600" cy="234" r="82" fill="#f0c46b" opacity=".65"/>
+  <path d="M600 168v132M534 234h132" stroke="#8b5a2b" stroke-width="18" stroke-linecap="round"/>
+  <path d="M456 580c18-126 64-214 144-214s126 88 144 214H456Z" fill="#5a3320"/>
+  <path d="M516 580c13-74 40-124 84-124s71 50 84 124H516Z" fill="#d59b2d"/>
+  <path d="M418 600h364" stroke="#2d1b12" stroke-width="26" stroke-linecap="round"/>
+  <path d="M804 262c42 28 70 75 70 128 0 85-69 154-154 154" fill="none" stroke="#8b5a2b" stroke-width="16" stroke-linecap="round" stroke-dasharray="18 24"/>
+  <text x="120" y="142" fill="#2d1b12" font-family="Arial, sans-serif" font-size="54" font-weight="700">Restauração religiosa</text>
+  <text x="120" y="202" fill="#705f50" font-family="Arial, sans-serif" font-size="30">Imagem de exemplo para substituir por foto real</text>
+</svg>
