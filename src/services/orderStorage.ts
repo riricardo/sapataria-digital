@@ -86,9 +86,9 @@ export function deleteOrder(orderId: string): void {
 }
 
 export function findOrderByCode(code: string): Order | null {
-  const normalizedCode = code.trim().toUpperCase()
+  const normalizedCode = code.replace(/\D/g, '')
 
-  return getOrders().find((order) => order.code.toUpperCase() === normalizedCode) ?? null
+  return getOrders().find((order) => order.code.replace(/\D/g, '') === normalizedCode) ?? null
 }
 
 export function findOrdersByPhone(phone: string): Order[] {

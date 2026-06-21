@@ -6,6 +6,12 @@ import type { Order } from '../types/order'
 
 type SearchMode = 'code' | 'phone'
 
+function formatOrderCode(value: string) {
+  const digits = value.replace(/\D/g, '').slice(0, 11)
+  const parts = [digits.slice(0, 4), digits.slice(4, 6), digits.slice(6, 8), digits.slice(8, 11)]
+  return parts.filter(Boolean).join('-')
+}
+
 export function CheckOrder() {
   const [searchMode, setSearchMode] = useState<SearchMode>('code')
   const [phone, setPhone] = useState('')
@@ -86,10 +92,14 @@ export function CheckOrder() {
               <input
                 ref={codeRef}
                 required
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={13}
                 value={code}
-                onChange={(event) => setCode(event.target.value)}
+                onChange={(event) => setCode(formatOrderCode(event.target.value))}
                 onKeyDown={(event) => handleNextKey(event, submitRef.current)}
-                placeholder="Ex.: AAAA-MM-DD-XXX"
+                placeholder="Ex.: 2026-06-19-001"
+                title="Digite apenas números; o formato será aplicado automaticamente"
               />
             </label>
           ) : (

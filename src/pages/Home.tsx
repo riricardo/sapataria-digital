@@ -94,15 +94,29 @@ export function Home() {
     }
   }, [])
 
-  const handleGalleryClick = (index: number) => {
-    setActiveGalleryIndex(index)
-    // Reseta o timer quando o usuário clica
+  const resetGalleryTimer = () => {
     if (timerRef.current) {
       window.clearInterval(timerRef.current)
     }
+
     timerRef.current = window.setInterval(() => {
       setActiveGalleryIndex((current) => (current + 1) % galleryItems.length)
     }, 7000)
+  }
+
+  const handleGalleryClick = (index: number) => {
+    setActiveGalleryIndex(index)
+    resetGalleryTimer()
+  }
+
+  const handleGalleryPrev = () => {
+    setActiveGalleryIndex((current) => (current - 1 + galleryItems.length) % galleryItems.length)
+    resetGalleryTimer()
+  }
+
+  const handleGalleryNext = () => {
+    setActiveGalleryIndex((current) => (current + 1) % galleryItems.length)
+    resetGalleryTimer()
   }
 
   function scrollToTop() {
@@ -150,6 +164,14 @@ export function Home() {
                 className="work-carousel__media"
                 style={{ backgroundImage: `url(${activeGalleryItem.image})` }}
               >
+                <button
+                  type="button"
+                  aria-label="Imagem anterior"
+                  className="work-carousel__nav work-carousel__nav--prev"
+                  onClick={handleGalleryPrev}
+                >
+                  ‹
+                </button>
                 <img
                   src={activeGalleryItem.image}
                   alt={activeGalleryItem.title}
@@ -163,6 +185,14 @@ export function Home() {
                     event.currentTarget.src = event.currentTarget.dataset.fallback ?? ''
                   }}
                 />
+                <button
+                  type="button"
+                  aria-label="Próxima imagem"
+                  className="work-carousel__nav work-carousel__nav--next"
+                  onClick={handleGalleryNext}
+                >
+                  ›
+                </button>
               </div>
               <div className="work-carousel__dots" aria-label="Selecionar imagem">
                 {galleryItems.map((item, index) => (
