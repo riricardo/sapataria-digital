@@ -222,6 +222,10 @@ function dataUrlSizeInBytes(dataUrl: string) {
   return Math.ceil((base64.length * 3) / 4)
 }
 
+function stripDataUrlPrefix(dataUrl: string) {
+  return dataUrl.replace(/^data:[^;]+;base64,/, '')
+}
+
 function loadImage(dataUrl: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const image = new Image()
@@ -317,21 +321,22 @@ function attachmentFilename(filename: string) {
 }
 
 function buildOrderAttachments(orderData: OrderEmailPayload): OrderEmailAttachment[] {
-  if (orderData.attachments?.length) {
-    return orderData.attachments
-  }
+  const attachments = orderData.attachments?.length
+    ? orderData.attachments
+    : orderData.imageBase64
+      ? [
+          {
+            filename: `${orderData.orderCode}.jpg`,
+            contentType: 'image/jpeg',
+            contentBase64: orderData.imageBase64,
+          },
+        ]
+      : []
 
-  if (!orderData.imageBase64) {
-    return []
-  }
-
-  return [
-    {
-      filename: `${orderData.orderCode}.jpg`,
-      contentType: 'image/jpeg',
-      contentBase64: orderData.imageBase64,
-    },
-  ]
+  return attachments.map((attachment) => ({
+    ...attachment,
+    contentBase64: stripDataUrlPrefix(attachment.contentBase64),
+  }))
 }
 
 function buildOrderEmailApiPayload(orderData: OrderEmailPayload): OrderEmailApiPayload {
@@ -358,6 +363,21 @@ export async function fileToCompressedAttachment(file: File): Promise<OrderEmail
 }
 
 export async function fileToCompressedImage(file: File): Promise<CompressedOrderImage> {
+  if (file.type === ATTACHMENT_IMAGE_TYPE && file.size <= ATTACHMENT_MAX_SIZE_BYTES) {
+    const originalAttachment = await readFileAsAttachment(file)
+
+    return {
+      attachment: {
+        filename: attachmentFilename(file.name),
+        contentType: file.type || ATTACHMENT_IMAGE_TYPE,
+        contentBase64: originalAttachment.dataUrl,
+      },
+      originalSizeMB: sizeInMB(file),
+      optimizedSizeMB: sizeInMB(file),
+      reductionPercent: 0,
+    }
+  }
+
   let compressedFile = file
   let compressionError: unknown = null
 
@@ -406,39 +426,52 @@ export async function fileToCompressedImage(file: File): Promise<CompressedOrder
       reductionPercent,
     }
   } catch (error) {
-    console.warn('[image-compression] normalize failed, using original file as fallback', {
+    console.warn('[image-compression] normalize failed', {
       filename: file.name,
       mimeType: file.type || 'desconhecido',
       error,
       compressionError,
     })
 
-    try {
-      const originalAttachment = await readFileAsAttachment(file)
-      const contentType = mimeFromDataUrl(originalAttachment.dataUrl, ATTACHMENT_IMAGE_TYPE)
-      const originalSizeMB = sizeInMB(file)
+    const supportedRawFallback = file.type === ATTACHMENT_IMAGE_TYPE
+      || file.type === 'image/png'
+      || file.type === 'image/webp'
 
-      return {
-        attachment: {
-          filename: filenameWithMime(file.name, contentType),
-          contentType,
-          contentBase64: originalAttachment.dataUrl,
-        },
-        originalSizeMB,
-        optimizedSizeMB: originalSizeMB,
-        reductionPercent: 0,
+    if (supportedRawFallback) {
+      try {
+        const originalAttachment = await readFileAsAttachment(file)
+        const contentType = mimeFromDataUrl(originalAttachment.dataUrl, ATTACHMENT_IMAGE_TYPE)
+        const originalSizeMB = sizeInMB(file)
+
+        return {
+          attachment: {
+            filename: filenameWithMime(file.name, contentType),
+            contentType,
+            contentBase64: originalAttachment.dataUrl,
+          },
+          originalSizeMB,
+          optimizedSizeMB: originalSizeMB,
+          reductionPercent: 0,
+        }
+      } catch (fallbackError) {
+        console.error('[image-compression] Falha no fallback de imagem original', {
+          filename: file.name,
+          mimeType: file.type || 'desconhecido',
+          error: fallbackError,
+          compressionError,
+        })
+        throw new Error('Não foi possível preparar a imagem. Use JPG, PNG ou WEBP e tente novamente.', {
+          cause: fallbackError,
+        })
       }
-    } catch (fallbackError) {
-      console.error('[image-compression] Falha no fallback de imagem original', {
-        filename: file.name,
-        mimeType: file.type || 'desconhecido',
-        error: fallbackError,
-        compressionError,
-      })
-      throw new Error('Não foi possível preparar a imagem. Use JPG, PNG ou WEBP e tente uma foto menor.', {
-        cause: fallbackError,
-      })
     }
+
+    throw new Error(
+      'Não foi possível preparar a imagem. Escolha JPG, PNG ou WEBP ou tire a foto diretamente com a câmera.',
+      {
+        cause: error,
+      },
+    )
   }
 }
 
