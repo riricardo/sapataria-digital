@@ -291,6 +291,70 @@ export async function fileToCompressedAttachment(file: File): Promise<OrderEmail
 }
 
 export async function fileToCompressedImage(file: File): Promise<CompressedOrderImage> {
+  // Try client-side HEIC->JPEG conversion using heic2any loaded from CDN, then pica resizing.
+  try {
+    if (file.type === 'image/heic' || file.type === 'image/heif') {
+      const cdn = 'https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js'
+      await new Promise<void>((resolve, reject) => {
+        if ((window as any).heic2any) return resolve()
+        const s = document.createElement('script')
+        s.src = cdn
+        s.onload = () => resolve()
+        s.onerror = () => reject(new Error('Failed to load heic2any from CDN'))
+        document.head.appendChild(s)
+      })
+
+      const heic2any = (window as any).heic2any
+      if (typeof heic2any === 'function') {
+        // @ts-ignore
+        const converted: Blob = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.92 })
+        const convertedDataUrl = await readFileAsDataUrl(converted)
+        // continue with pica resize using convertedDataUrl
+        const sourceImage = await loadImage(convertedDataUrl)
+        const maxSide = Math.max(sourceImage.naturalWidth, sourceImage.naturalHeight)
+        const scale = maxSide > ATTACHMENT_MAX_DIMENSION ? ATTACHMENT_MAX_DIMENSION / maxSide : 1
+        const width = Math.max(1, Math.round(sourceImage.naturalWidth * scale))
+        const height = Math.max(1, Math.round(sourceImage.naturalHeight * scale))
+
+        const srcCanvas = document.createElement('canvas')
+        srcCanvas.width = sourceImage.naturalWidth
+        srcCanvas.height = sourceImage.naturalHeight
+        const sctx = srcCanvas.getContext('2d')
+        if (!sctx) throw new Error('Não foi possível preparar a imagem')
+        sctx.drawImage(sourceImage, 0, 0)
+
+        const dstCanvas = document.createElement('canvas')
+        dstCanvas.width = width
+        dstCanvas.height = height
+
+        // @ts-ignore
+        const p = pica()
+        // @ts-ignore
+        await p.resize(srcCanvas, dstCanvas, { quality: 3 })
+        // @ts-ignore
+        const blob = await p.toBlob(dstCanvas, ATTACHMENT_IMAGE_TYPE, 0.86)
+        const dataUrl = await readFileAsDataUrl(blob)
+        const size = dataUrlSizeInBytes(dataUrl)
+        const originalSizeMB = sizeInMB(file)
+        const optimizedSizeMB = (size / 1024 / 1024).toFixed(2)
+        const reductionPercent = file.size ? Math.max(0, Math.round(((file.size - size) / file.size) * 100)) : 0
+
+        return {
+          attachment: {
+            filename: filenameWithMime(file.name, ATTACHMENT_IMAGE_TYPE),
+            contentType: ATTACHMENT_IMAGE_TYPE,
+            contentBase64: dataUrl,
+          },
+          originalSizeMB,
+          optimizedSizeMB,
+          reductionPercent,
+        }
+      }
+    }
+  } catch (heicErr) {
+    console.warn('[image-processing] heic2any conversion failed, falling back to pica', { filename: file.name, error: heicErr })
+  }
+
   try {
     let inputBlob: Blob = file
     let inputDataUrl = await readFileAsDataUrl(inputBlob)
