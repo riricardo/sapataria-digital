@@ -105,14 +105,27 @@ function onlyDigits(value: string) {
   return value.replace(/\D/g, '')
 }
 
-function buildWhatsAppUrl(phone: string, orderCode: string) {
+function formatOrderCodeForWhatsApp(orderCode: string) {
+  return orderCode.replace(/[-_./]/g, ' ')
+}
+
+function buildWhatsAppUrl(order: OrderEmailHtmlOrder) {
+  const { orderCode, phone, itemType, serviceDescription } = order
   const digits = onlyDigits(phone)
   if (!digits) {
     return ''
   }
 
   const phoneWithCountryCode = digits.startsWith('55') ? digits : `55${digits}`
-  const message = encodeURIComponent(`Relativo à solicitação ${orderCode}`)
+  const readableOrderCode = formatOrderCodeForWhatsApp(orderCode)
+  const message = encodeURIComponent([
+    `Olá! Aqui é da Sapataria Bebedouro.`,
+    `Estou entrando em contato sobre a solicitação ${readableOrderCode}.`,
+    `Item: ${itemType}.`,
+    `Serviço: ${serviceDescription || 'Não informado'}.`,
+    '',
+    'Valor estimado do reparo: R$ ',
+  ].join('\n'))
   return `https://wa.me/${phoneWithCountryCode}?text=${message}`
 }
 
@@ -125,7 +138,7 @@ export function buildOrderEmailHtml(order: OrderEmailHtmlOrder) {
     serviceDescription,
     problemDescription,
   } = order
-  const phoneUrl = buildWhatsAppUrl(phone, orderCode)
+  const phoneUrl = buildWhatsAppUrl(order)
   const escapedPhone = escapeHtml(phone)
   const phoneContent = phoneUrl
     ? `<a href="${escapeHtml(phoneUrl)}" style="display: inline-block; background: #0f5c2e; color: #fff; padding: 8px 12px; border-radius: 4px; font-weight: bold; text-decoration: none;">Abrir WhatsApp: ${escapedPhone}</a>`

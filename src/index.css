@@ -838,26 +838,6 @@ textarea {
   gap: 10px;
 }
 
-.image-optimization {
-  display: grid;
-  gap: 4px;
-  width: fit-content;
-  max-width: 100%;
-  border: 1px solid rgba(47, 111, 78, 0.16);
-  border-radius: 8px;
-  padding: 10px 12px;
-  background: rgba(223, 242, 232, 0.72);
-  color: var(--success);
-  font-size: 0.86rem;
-  font-weight: 800;
-}
-
-.photo-preview-grid__remove-text {
-  width: 100%;
-  min-height: 42px;
-  cursor: pointer;
-}
-
 .upload-box__input {
   position: absolute;
   width: 1px;
@@ -916,15 +896,6 @@ textarea {
   border-radius: 8px;
   object-fit: cover;
   background: var(--cream-200);
-}
-
-.photo-preview-grid figcaption {
-  overflow: hidden;
-  color: var(--muted);
-  font-size: 0.78rem;
-  font-weight: 700;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .notice {

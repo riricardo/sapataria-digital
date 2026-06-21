@@ -61,6 +61,7 @@ const initialState: FormState = {
 }
 
 const DRAFT_STORAGE_KEY = 'sapataria-bebedouro-new-order-draft'
+const MAX_IMAGE_COUNT = 4
 
 interface DraftState {
   form: Omit<FormState, 'imageBase64List'>
@@ -69,12 +70,6 @@ interface DraftState {
 type ToastState = {
   message: string
   type: 'error' | 'success'
-}
-
-type ImageOptimizationState = {
-  originalSizeMB: string
-  optimizedSizeMB: string
-  reductionPercent: number
 }
 
 function isItemType(value: unknown): value is ItemType {
@@ -154,7 +149,6 @@ export function NewOrder() {
   const [createdOrderCode, setCreatedOrderCode] = useState<string | null>(null)
   const [imageNames, setImageNames] = useState<string[]>([])
   const [imageAttachments, setImageAttachments] = useState<OrderEmailAttachment[]>([])
-  const [imageOptimization, setImageOptimization] = useState<ImageOptimizationState | null>(null)
   const [toast, setToast] = useState<ToastState | null>(null)
   const [showImageError, setShowImageError] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -284,7 +278,16 @@ export function NewOrder() {
     updateField('imageBase64List', [])
     setImageNames([])
     setImageAttachments([])
-    setImageOptimization(null)
+    clearImageInputs()
+  }
+
+  function removeImage(indexToRemove: number) {
+    updateField(
+      'imageBase64List',
+      form.imageBase64List.filter((_, index) => index !== indexToRemove),
+    )
+    setImageNames((current) => current.filter((_, index) => index !== indexToRemove))
+    setImageAttachments((current) => current.filter((_, index) => index !== indexToRemove))
     clearImageInputs()
   }
 
@@ -308,18 +311,36 @@ export function NewOrder() {
       return
     }
 
-    fileToCompressedImage(files[0])
-      .then((compressedImage) => {
-        updateField('imageBase64List', [compressedImage.attachment.contentBase64])
-        setImageNames([compressedImage.attachment.filename])
-        setImageAttachments([compressedImage.attachment])
-        setImageOptimization({
-          originalSizeMB: compressedImage.originalSizeMB,
-          optimizedSizeMB: compressedImage.optimizedSizeMB,
-          reductionPercent: compressedImage.reductionPercent,
-        })
+    const remainingSlots = MAX_IMAGE_COUNT - imageAttachments.length
+    if (remainingSlots <= 0) {
+      clearImageInputs()
+      showToast(`Use no máximo ${MAX_IMAGE_COUNT} fotos por pedido.`, 'error')
+      return
+    }
+
+    const selectedFiles = files.slice(0, remainingSlots)
+
+    Promise.all(selectedFiles.map(fileToCompressedImage))
+      .then((compressedImages) => {
+        updateField('imageBase64List', [
+          ...form.imageBase64List,
+          ...compressedImages.map((image) => image.attachment.contentBase64),
+        ])
+        setImageNames((current) => [
+          ...current,
+          ...compressedImages.map((image) => image.attachment.filename),
+        ])
+        setImageAttachments((current) => [
+          ...current,
+          ...compressedImages.map((image) => image.attachment),
+        ])
         setShowImageError(false)
-        setToast(null)
+        if (files.length > remainingSlots) {
+          showToast(`Use no máximo ${MAX_IMAGE_COUNT} fotos por pedido. As primeiras foram mantidas.`, 'error')
+        } else {
+          setToast(null)
+        }
+        clearImageInputs()
         focusNext(submitRef.current)
       })
       .catch(() => {
@@ -549,30 +570,26 @@ export function NewOrder() {
               ref={galleryInputRef}
               accept="image/*"
               hidden
+              multiple
               type="file"
               onChange={handleImage}
             />
             {imageNames.length ? <small>{imageNames.length} foto(s) selecionada(s)</small> : null}
-            {imageOptimization ? (
-              <div className="image-optimization" aria-live="polite">
-                <span>Imagem original: {imageOptimization.originalSizeMB} MB</span>
-                <span>Imagem otimizada: {imageOptimization.optimizedSizeMB} MB</span>
-                <span>Redução: {imageOptimization.reductionPercent}%</span>
-              </div>
-            ) : null}
             {form.imageBase64List.length ? (
               <div className="photo-preview-grid" aria-label="Prévia das fotos selecionadas">
                 {form.imageBase64List.map((image, index) => (
                   <figure key={`${imageNames[index] ?? 'foto'}-${index}`}>
-                    <img src={image} alt={`Prévia ${index + 1}`} />
-                    <figcaption>{imageNames[index] ?? `Foto ${index + 1}`}</figcaption>
                     <button
-                      className="button button--ghost photo-preview-grid__remove-text"
+                      aria-label={`Remover foto ${index + 1}`}
+                      className="photo-preview-grid__remove"
                       type="button"
-                      onClick={clearSelectedImage}
+                      onClick={() => removeImage(index)}
                     >
-                      🗑️ Remover Foto
+                      <svg aria-hidden="true" viewBox="0 0 20 20">
+                        <path d="m5.5 5.5 9 9m0-9-9 9" />
+                      </svg>
                     </button>
+                    <img src={image} alt={`Prévia ${index + 1}`} />
                   </figure>
                 ))}
               </div>
