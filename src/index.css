@@ -320,22 +320,31 @@ p {
   border-radius: 8px;
   background: var(--white);
   box-shadow: var(--shadow);
+  width: 100%;
 }
 
 .work-carousel__media {
-  min-height: clamp(320px, 48vw, 520px);
+  aspect-ratio: 4 / 3;
+  min-height: unset;
+  height: auto;
   background: var(--cream-200);
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  width: 100%;
+  place-items: center;
 }
 
 .hero-gallery .work-carousel__media {
-  min-height: clamp(220px, 30vw, 340px);
 }
 
 .work-carousel__media img {
-  display: block;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  max-width: none;
+  max-height: none;
+  object-fit: cover;
+  object-position: center;
   transition: opacity 220ms ease;
 }
 
@@ -434,6 +443,44 @@ p {
   align-items: end;
   justify-content: space-between;
   gap: 16px;
+}
+
+.hammer-emoji {
+  display: inline-block;
+  font-size: 2rem;
+  transform-origin: 70% 100%;
+  animation: hammer-swing 2.4s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+  flex-shrink: 0;
+}
+
+.brand .hammer-emoji {
+  font-size: 1.15em;
+  margin-left: auto;
+  animation: hammer-swing 1.8s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+}
+
+@keyframes hammer-swing {
+  0% {
+    transform: rotate(0deg);
+  }
+  15% {
+    transform: rotate(-28deg);
+  }
+  30% {
+    transform: rotate(0deg);
+  }
+  45% {
+    transform: rotate(-22deg);
+  }
+  60% {
+    transform: rotate(0deg);
+  }
+  75% {
+    transform: rotate(-32deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
 }
 
 .info-grid,
@@ -1228,8 +1275,38 @@ textarea {
     max-width: 100%;
   }
 
+  .work-carousel {
+    border-radius: 12px;
+  }
+
   .work-carousel__media {
-    min-height: 260px;
+    height: auto;
+    aspect-ratio: 4 / 3;
+  }
+
+  .hero-gallery .work-carousel__media {
+    height: auto;
+  }
+
+  .work-carousel__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .work-carousel__dots {
+    padding: 10px 8px;
+    gap: 6px;
+    overflow-x: auto;
+  }
+
+  .work-carousel__dots button {
+    flex: 0 0 auto;
+    width: 28px;
+  }
+
+  .work-carousel__dots button.is-active {
+    width: 42px;
   }
 
   .hero-tags {

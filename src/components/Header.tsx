@@ -15,6 +15,7 @@ export function Header() {
           <strong>SAPATARIA BEBEDOURO</strong>
           <small>Consertos e restaurações ✨</small>
         </span>
+        <span className="hammer-emoji" aria-hidden="true">🔨</span>
       </NavLink>
       <nav className="site-nav" aria-label="Navegação principal">
         <NavLink to="/novo-pedido" onClick={scrollToTop}>🧾 Orçamento</NavLink>

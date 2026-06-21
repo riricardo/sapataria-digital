@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { Button } from '../components/Button'
 import { staticAsset } from '../utils/staticAsset'
 
@@ -73,14 +73,37 @@ const galleryItems = [
 
 export function Home() {
   const [activeGalleryIndex, setActiveGalleryIndex] = useState(0)
+  const timerRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
-    const timer = window.setInterval(() => {
+    const startTimer = () => {
+      if (timerRef.current) {
+        window.clearInterval(timerRef.current)
+      }
+      timerRef.current = window.setInterval(() => {
+        setActiveGalleryIndex((current) => (current + 1) % galleryItems.length)
+      }, 7000)
+    }
+
+    startTimer()
+
+    return () => {
+      if (timerRef.current) {
+        window.clearInterval(timerRef.current)
+      }
+    }
+  }, [])
+
+  const handleGalleryClick = (index: number) => {
+    setActiveGalleryIndex(index)
+    // Reseta o timer quando o usuário clica
+    if (timerRef.current) {
+      window.clearInterval(timerRef.current)
+    }
+    timerRef.current = window.setInterval(() => {
       setActiveGalleryIndex((current) => (current + 1) % galleryItems.length)
     }, 7000)
-
-    return () => window.clearInterval(timer)
-  }, [])
+  }
 
   function scrollToTop() {
     window.setTimeout(() => {
@@ -123,7 +146,10 @@ export function Home() {
               </div>
             </div>
             <div className="work-carousel" aria-live="polite">
-              <div className="work-carousel__media">
+              <div
+                className="work-carousel__media"
+                style={{ backgroundImage: `url(${activeGalleryItem.image})` }}
+              >
                 <img
                   src={activeGalleryItem.image}
                   alt={activeGalleryItem.title}
@@ -145,7 +171,7 @@ export function Home() {
                     className={index === activeGalleryIndex ? 'is-active' : ''}
                     key={item.title}
                     type="button"
-                    onClick={() => setActiveGalleryIndex(index)}
+                    onClick={() => handleGalleryClick(index)}
                   />
                 ))}
               </div>
