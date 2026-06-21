@@ -18,7 +18,6 @@ export interface Order {
   itemType: ItemType
   service: string
   description: string
-  example?: string
   imageBase64?: string
   imageBase64List?: string[]
   status: OrderStatus

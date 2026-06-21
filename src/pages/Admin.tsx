@@ -33,9 +33,9 @@ export function Admin() {
     <main className="page-shell">
       <section className="admin-header">
         <div>
-          <p className="eyebrow">🛠️ Area demonstrativa</p>
+          <p className="eyebrow">🛠️ Área demonstrativa</p>
           <h1>Pedidos da sapataria</h1>
-          <p>Use esta area para acompanhar pedidos, alterar status e registrar atualizacoes ao cliente.</p>
+          <p>Use esta área para acompanhar pedidos, alterar status e registrar atualizações ao cliente.</p>
         </div>
         <div className="admin-actions">
           <Button variant="secondary" onClick={handleCreateDemo}>✨ Criar dados demo</Button>
@@ -68,7 +68,7 @@ export function Admin() {
       {!filteredOrders.length ? (
         <div className="empty-state">
           <strong>Nenhum pedido por aqui.</strong>
-          <p>Crie um pedido novo pelo site ou gere dados demo para testar a administracao.</p>
+          <p>Crie um pedido novo pelo site ou gere dados demo para testar a administração.</p>
         </div>
       ) : null}
 

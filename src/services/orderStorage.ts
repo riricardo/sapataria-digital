@@ -9,7 +9,6 @@ export interface NewOrderInput {
   itemType: ItemType
   service: string
   description: string
-  example?: string
 }
 
 export function getOrders(): Order[] {
@@ -95,8 +94,8 @@ export function createDemoOrders(): Order[] {
       customerName: 'Maria Aparecida',
       phone: '17 99999-0101',
       itemType: 'Bolsa',
-      service: 'Trocar ziper',
-      description: 'O ziper da bolsa travou e uma parte do tecido abriu.',
+      service: 'Trocar zíper',
+      description: 'O zíper da bolsa travou e uma parte do tecido abriu.',
       status: 'em_analise',
       createdAt: now.toISOString(),
       updatedAt: now.toISOString(),
@@ -104,14 +103,14 @@ export function createDemoOrders(): Order[] {
     {
       id: crypto.randomUUID(),
       code: '2026-06-19-002',
-      customerName: 'Joao Carlos',
+      customerName: 'João Carlos',
       phone: '17 98888-0202',
       itemType: 'Sapato',
       service: 'Troca de sola',
-      description: 'A sola do sapato social esta descolando na ponta.',
+      description: 'A sola do sapato social está descolando na ponta.',
       status: 'orcamento_enviado',
       budget: 'R$ 85,00',
-      estimatedTime: '3 dias uteis',
+      estimatedTime: '3 dias úteis',
       note: 'Cliente pediu retirada no fim da tarde.',
       createdAt: now.toISOString(),
       updatedAt: now.toISOString(),

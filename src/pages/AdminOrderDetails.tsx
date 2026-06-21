@@ -16,8 +16,8 @@ export function AdminOrderDetails() {
     return (
       <main className="page-shell">
         <div className="empty-state">
-          <strong>Pedido nao encontrado.</strong>
-          <Link className="text-link" to="/admin">Voltar para administracao</Link>
+          <strong>Pedido não encontrado.</strong>
+          <Link className="text-link" to="/admin">Voltar para administração</Link>
         </div>
       </main>
     )
@@ -65,9 +65,8 @@ export function AdminOrderDetails() {
             <p><strong>Cliente:</strong> {order.customerName}</p>
             <p><strong>WhatsApp:</strong> {order.phone}</p>
             <p><strong>Item:</strong> {order.itemType}</p>
-            <p><strong>Servico:</strong> {order.service}</p>
-            <p><strong>Descricao:</strong> {order.description}</p>
-            {order.example ? <p><strong>Exemplo desejado:</strong> {order.example}</p> : null}
+            <p><strong>Serviço:</strong> {order.service}</p>
+            <p><strong>Descrição:</strong> {order.description}</p>
             <p><strong>Criado em:</strong> {new Date(order.createdAt).toLocaleString('pt-BR')}</p>
           </div>
 
@@ -100,15 +99,15 @@ export function AdminOrderDetails() {
           </label>
           <label>
             Prazo estimado
-            <input value={order.estimatedTime ?? ''} onChange={(event) => setField('estimatedTime', event.target.value)} placeholder="Ex.: 3 dias uteis" />
+            <input value={order.estimatedTime ?? ''} onChange={(event) => setField('estimatedTime', event.target.value)} placeholder="Ex.: 3 dias úteis" />
           </label>
           <label>
-            Observacao interna/para cliente
+            Observação interna/para cliente
             <textarea rows={4} value={order.note ?? ''} onChange={(event) => setField('note', event.target.value)} />
           </label>
 
           <div className="form-actions stacked">
-            <Button type="submit">💾 Salvar alteracoes</Button>
+            <Button type="submit">💾 Salvar alterações</Button>
             <Button variant="danger" onClick={() => setConfirmDelete(true)}>🗑️ Excluir pedido</Button>
           </div>
         </form>
@@ -125,7 +124,7 @@ export function AdminOrderDetails() {
             </>
           }
         >
-          <p>O pedido {order.code} sera removido do localStorage deste navegador.</p>
+          <p>O pedido {order.code} será removido do localStorage deste navegador.</p>
         </Modal>
       ) : null}
     </main>

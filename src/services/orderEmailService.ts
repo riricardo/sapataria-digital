@@ -15,7 +15,6 @@ export interface OrderEmailPayload {
   formattedMessage?: string
   serviceDescription?: string
   problemDescription?: string
-  problemDescriptionFormatted?: string
   imageBase64?: string
 }
 
@@ -46,7 +45,8 @@ export function buildOrderEmailBody(orderData: {
     `Tipo de item: ${orderData.itemType}`,
     `Serviço desejado: ${orderData.serviceDescription}`,
     '',
-    'DESCRIÇÃO DO PROBLEMA',
+    'PROBLEMA RELATADO',
+    '-----------------',
     orderData.problemDescription,
   ].join('\n')
 }

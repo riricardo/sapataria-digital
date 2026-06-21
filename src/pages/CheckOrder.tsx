@@ -59,7 +59,7 @@ export function CheckOrder() {
         <div className="section-heading">
           <p className="eyebrow">🔎 Acompanhe seu pedido</p>
           <h1>Consulta</h1>
-          <p>Consulte pelo numero da ordem de servico ou pelo WhatsApp usado no cadastro.</p>
+          <p>Consulte pelo número da ordem de serviço ou pelo WhatsApp usado no cadastro.</p>
         </div>
 
         <form className="form-grid single" onSubmit={handleSubmit}>
@@ -69,7 +69,7 @@ export function CheckOrder() {
               type="button"
               onClick={() => handleModeChange('code')}
             >
-              Ordem de servico
+              Ordem de serviço
             </button>
             <button
               className={searchMode === 'phone' ? 'is-active' : ''}
@@ -82,7 +82,7 @@ export function CheckOrder() {
 
           {searchMode === 'code' ? (
             <label>
-              Numero da ordem de servico
+              Número da ordem de serviço
               <input
                 ref={codeRef}
                 required
@@ -120,11 +120,11 @@ export function CheckOrder() {
                   <StatusBadge status={order.status} />
                 </div>
                 <p><strong>Item:</strong> {order.itemType}</p>
-                <p><strong>Descricao:</strong> {order.description}</p>
+                <p><strong>Descrição:</strong> {order.description}</p>
                 {order.budget ? <p><strong>Orçamento:</strong> {order.budget}</p> : null}
                 {order.estimatedTime ? <p><strong>Prazo estimado:</strong> {order.estimatedTime}</p> : null}
-                {order.note ? <p><strong>Observacao:</strong> {order.note}</p> : null}
-                <p className="notice">A sapataria entrara em contato com a atualizacao do orçamento ou retirada.</p>
+                {order.note ? <p><strong>Observação:</strong> {order.note}</p> : null}
+                <p className="notice">A sapataria entrará em contato com a atualização do orçamento ou retirada.</p>
               </article>
             ))}
           </div>
@@ -132,8 +132,8 @@ export function CheckOrder() {
 
         {searched && !orders.length ? (
           <div className="empty-state">
-            <strong>Nao encontramos pedido.</strong>
-            <p>Confira se a informacao digitada esta igual a usada quando o pedido foi criado.</p>
+            <strong>Não encontramos pedido.</strong>
+            <p>Confira se a informação digitada está igual à usada quando o pedido foi criado.</p>
           </div>
         ) : null}
       </section>

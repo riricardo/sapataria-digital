@@ -22,11 +22,11 @@ const itemTypes: ItemType[] = ['Sapato', 'Bolsa', 'Cinto', 'Jaqueta', 'Outro']
 const serviceSuggestions = [
   'Troca de sola',
   'Troca de salto',
-  'Troca de ziper',
+  'Troca de zíper',
   'Costura',
   'Reforma de couro',
   'Ajuste de cinto',
-  'Limpeza e hidratacao',
+  'Limpeza e hidratação',
 ]
 
 interface FormState {
@@ -257,7 +257,6 @@ export function NewOrder() {
         formattedMessage: emailBody,
         serviceDescription: order.service,
         problemDescription: order.description,
-        problemDescriptionFormatted: emailBody,
         ...(imageBase64 ? { imageBase64 } : {}),
       })
 
@@ -275,7 +274,7 @@ export function NewOrder() {
       showToast(
         error instanceof Error
           ? error.message
-          : 'Nao foi possivel enviar o orçamento. Tente novamente em alguns instantes.',
+          : 'Não foi possível enviar o orçamento. Tente novamente em alguns instantes.',
         'error',
       )
     } finally {
@@ -299,7 +298,7 @@ export function NewOrder() {
           <h1>Solicitar orçamento</h1>
           <p>
             Preencha o essencial e anexe pelo menos uma foto da parte que precisa de conserto.
-            Depois envie o resumo por email para a sapataria avaliar e responder.
+            Depois envie o resumo para a sapataria avaliar e responder.
           </p>
         </div>
 
@@ -352,7 +351,7 @@ export function NewOrder() {
           </label>
 
           <label>
-            Servico desejado
+            Serviço desejado
             <input
               name="Serviço desejado"
               ref={serviceRef}
@@ -361,7 +360,7 @@ export function NewOrder() {
               value={form.service}
               onChange={(event) => updateField('service', event.target.value)}
               onKeyDown={(event) => handleNextKey(event, descriptionRef.current)}
-              placeholder="Ex.: Trocar ziper"
+              placeholder="Ex.: Trocar zíper"
             />
             <datalist id="services">
               {serviceSuggestions.map((service) => (
@@ -371,7 +370,7 @@ export function NewOrder() {
           </label>
 
           <label className="form-grid__wide">
-            Descricao do problema
+            Descrição do problema
             <textarea
               name="Descrição do problema"
               ref={descriptionRef}
@@ -380,7 +379,7 @@ export function NewOrder() {
               value={form.description}
               onChange={(event) => updateField('description', event.target.value)}
               onKeyDown={(event) => handleNextKey(event, fileRef.current)}
-              placeholder="Conte o que aconteceu, onde esta o problema e se existe alguma urgencia."
+              placeholder="Conte o que aconteceu, onde está o problema e se existe alguma urgência."
             />
           </label>
 
@@ -390,8 +389,8 @@ export function NewOrder() {
           >
             <strong>Fotos do item</strong>
             <p>
-              Tire fotos do item e da regiao que precisa de conserto. Exemplo: sola descolada, salto
-              quebrado, ziper da bolsa, costura aberta.
+              Tire fotos do item e da região que precisa de conserto. Exemplo: sola descolada, salto
+              quebrado, zíper da bolsa, costura aberta.
             </p>
             <label
               className="button button--secondary upload-box__button"
@@ -413,7 +412,7 @@ export function NewOrder() {
             />
             {imageNames.length ? <small>{imageNames.length} foto(s) selecionada(s)</small> : null}
             {form.imageBase64List.length ? (
-              <div className="photo-preview-grid" aria-label="Previa das fotos selecionadas">
+              <div className="photo-preview-grid" aria-label="Prévia das fotos selecionadas">
                 {form.imageBase64List.map((image, index) => (
                   <figure key={`${imageNames[index] ?? 'foto'}-${index}`}>
                     <button
@@ -426,7 +425,7 @@ export function NewOrder() {
                         <path d="m5.5 5.5 9 9m0-9-9 9" />
                       </svg>
                     </button>
-                    <img src={image} alt={`Previa ${index + 1}`} />
+                    <img src={image} alt={`Prévia ${index + 1}`} />
                     <figcaption>{imageNames[index] ?? `Foto ${index + 1}`}</figcaption>
                   </figure>
                 ))}
@@ -456,8 +455,8 @@ export function NewOrder() {
           <div className="summary-list">
             <p><strong>Cliente:</strong> {createdOrder.customerName}</p>
             <p><strong>Item:</strong> {createdOrder.itemType}</p>
-            <p><strong>Servico:</strong> {createdOrder.service}</p>
-            <p><strong>Descricao:</strong> {createdOrder.description}</p>
+            <p><strong>Serviço:</strong> {createdOrder.service}</p>
+            <p><strong>Descrição:</strong> {createdOrder.description}</p>
           </div>
           <p className="notice">
             O orçamento foi enviado para a sapataria. Aguarde o retorno com a avaliação.
